@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 16:45:13 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/10 11:50:20 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/10 17:47:05 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,9 @@ class Client
 		Client &operator=(const Client &other);
 		~Client();
 
-	private:	
+	private:
+		int client_fd;
+		
 
 };
 

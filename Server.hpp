@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 16:44:51 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/10 13:19:06 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/10 17:47:41 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,8 @@
 # include <arpa/inet.h> 			//for inet_ntoa()
 # include <poll.h> 					//for poll()
 # include <csignal> 				//for signal()
+
+# include "Client.hpp"
 
 class Server
 {
@@ -46,7 +48,7 @@ class Server
 		//bool	SignalReceived;
 		
 		std::string	password;
-		// vector<Client>	clients; 	// to keep track of connected clients + to manage their requests
+		std::vector<Client>	clients; 	// to keep track of connected clients + to manage their requests
 };
 
 #endif
