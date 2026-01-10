@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 16:44:51 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/10 11:37:05 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/10 11:43:28 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,11 +19,15 @@ class Server
 		~Server();
 		
 		void setport(int port);
+		void setpassword(std::string password);
+		
 		void InitServerSocket();
 
 	private:
 		int		port;
 		int		server_fd;
 		bool	SignalReceived;
+		
+		std::string	password;
 		// vector<Client>	clients; 	// to keep track of connected clients + to manage their requests
 };

@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 17:23:52 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/10 11:42:17 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/10 11:43:09 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,11 @@ Server::~Server()
 void Server::setport(int port)
 {
 	this->port = port;
+}
+
+void Server::setpassword(std::string password)
+{
+	this->password = password;
 }
 
 void Server::InitServerSocket()
