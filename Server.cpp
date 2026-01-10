@@ -6,11 +6,13 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 17:23:52 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/10 11:40:06 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/10 11:41:13 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include "ft_irc.hpp"
 #include "Server.hpp"
+
 Server::Server()
 {
 }
@@ -42,5 +44,11 @@ void Server::setport(int port)
 
 void Server::InitServerSocket()
 {
-	
+	sockaddr_in address;
+	this->server_fd = socket(AF_INET, SOCK_STREAM, 0);
+	if (this->server_fd == -1)
+	{
+		std::cerr << "Socket creation failed" << std::endl;
+		return;
+	}
 }
