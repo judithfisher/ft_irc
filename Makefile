@@ -6,7 +6,7 @@
 #    By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/01/09 15:25:05 by jfischer          #+#    #+#              #
-#    Updated: 2026/01/09 15:25:24 by jfischer         ###   ########.fr        #
+#    Updated: 2026/01/10 11:48:22 by jfischer         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -15,8 +15,9 @@ NAME = ft_irc
 C++ = c++
 FLAGS = -g -Wall -Wextra -Werror -std=c++98 
 
-SRCS = 	main.cpp \
-
+SRCS = 	Client.cpp \
+		main.cpp \
+		Server.cpp
 
 OBJS = $(SRCS:.cpp=.o)
 

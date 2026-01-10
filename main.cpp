@@ -6,11 +6,10 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 15:27:09 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/10 11:44:03 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/10 11:50:28 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "ft_irc.hpp"
 #include "Server.hpp"
 #include "Client.hpp"
 
