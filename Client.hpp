@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 16:45:13 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/10 18:10:26 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/10 18:32:14 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,18 +20,14 @@ class Server;
 class Client
 {
 	public:	
-		Client();
+		Client(int client_fd);
 		Client(const Client &other);
 		Client &operator=(const Client &other);
 		~Client();
 
-	void getServerfd();
-		
-	void acceptClient();
-
 	private:
 		//sockaddr_in client_addr;
-		Server *server;
+		// Server *server;
 		
 		int client_fd;
 		std::string nickname;

@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 16:44:51 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/10 18:12:57 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/10 18:21:11 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ class Server
 		void setpassword(std::string password);
 		
 		void InitServerSocket();
-		
+		void AcceptClients();
 		//void ClearClients();
 
 	private:

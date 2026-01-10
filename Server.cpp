@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 17:23:52 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/10 18:12:48 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/10 18:30:49 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,5 +78,24 @@ void Server::InitServerSocket()
 	{
 		std::cerr << "Listen failed" << std::endl;
 		return;
+	}
+}
+
+void Server::AcceptClients()
+{
+	int client_fd;
+	sockaddr_in client_addr;
+	socklen_t client_len = sizeof(client_addr);
+	
+	client_fd = accept(server_fd, (sockaddr*)&client_addr, &client_len);
+	if (client_fd < 0)
+	{
+		std::cerr << "Error accepting client connection" << std::endl;
+		return ;
+	}
+	if (client_fd > 0)
+	{
+		clients.push_back(Client(client_fd));
+		std::cout << "new client connected" << std::endl;
 	}
 }
