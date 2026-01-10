@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 15:27:09 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/10 11:36:01 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/10 11:39:34 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@ int main(int argc, char **argv)
 		return (1);
 	}
 	Server server;
-	server.port = std::atoi(argv[1]);
+	server.setport(std::atoi(argv[1]));
 	std::string password = argv[2];
 
 	int server_fd;
