@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 16:44:51 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/10 17:47:41 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/10 18:12:57 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,7 @@ class Server
 		Server &operator=(const Server &other);
 		~Server();
 		
+		int getServerfd();
 		void setport(int port);
 		void setpassword(std::string password);
 		

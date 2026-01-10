@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 17:23:52 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/10 17:42:38 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/10 18:12:48 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,6 +34,11 @@ Server &Server::operator=(const Server &other)
 
 Server::~Server()
 {
+}
+
+int Server::getServerfd()
+{
+	return (this->server_fd);
 }
 
 void Server::setport(int port)
@@ -74,5 +79,4 @@ void Server::InitServerSocket()
 		std::cerr << "Listen failed" << std::endl;
 		return;
 	}
-	
 }
