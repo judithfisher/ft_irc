@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 16:05:44 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/09 18:45:44 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/10 11:34:42 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,6 @@ in_addr: structure that contains a single field, s_addr, which is the IP address
 struct sockaddr_in 
 {
     sa_family_t sin_family;   	// AF_INET
-    in_port_t   sin_port;     	// Which port?
-    struct in_addr sin_addr;  	// Which IP?
+    in_port_t   sin_port;     	// Which port
+    struct in_addr sin_addr;  	// Which IP
 };

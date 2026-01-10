@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 17:23:52 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/09 17:24:39 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/10 11:36:45 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,4 +29,18 @@ Server &Server::operator=(const Server &other)
 		// this->clients = other.clients;
 	}
 	return (*this);
+}
+
+Server::~Server()
+{
+}
+
+Server::setport(int port)
+{
+	this->port = port;
+}
+
+void Server::InitServerSocket()
+{
+	
 }

@@ -6,11 +6,13 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 15:27:09 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/09 17:27:04 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/10 11:36:01 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_irc.hpp"
+#include "Server.hpp"
+#include "Client.hpp"
 
 // 
 int main(int argc, char **argv)
@@ -20,7 +22,8 @@ int main(int argc, char **argv)
 		std::cerr << "Usage: ./ft_irc <port> <password>" << std::endl;
 		return (1);
 	}
-	int port = std::atoi(argv[1]);
+	Server server;
+	server.port = std::atoi(argv[1]);
 	std::string password = argv[2];
 
 	int server_fd;

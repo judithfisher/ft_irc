@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 16:44:51 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/09 18:48:08 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/10 11:37:05 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,8 @@ class Server
 		Server(const Server &other);
 		Server &operator=(const Server &other);
 		~Server();
-
+		
+		void setport(int port);
 		void InitServerSocket();
 
 	private:
