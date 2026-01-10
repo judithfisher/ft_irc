@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 16:45:13 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/10 18:32:14 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/10 20:45:15 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,8 @@ class Client
 		Client(const Client &other);
 		Client &operator=(const Client &other);
 		~Client();
+
+		int getFd();
 
 	private:
 		//sockaddr_in client_addr;

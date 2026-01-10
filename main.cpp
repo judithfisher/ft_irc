@@ -6,26 +6,43 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 15:27:09 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/10 18:27:50 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/10 21:21:50 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 #include "Client.hpp"
+#include <string>
+#include <iostream>
+#include <sstream>
 
 // 
 int main(int argc, char **argv)
 {
+	std::string input;
 	if (argc != 3)
 	{
 		std::cerr << "Usage: ./ft_irc <port> <password>" << std::endl;
 		return (1);
 	}
-	
+
 	Server server;
 	server.setport(std::atoi(argv[1]));
 	server.setpassword(argv[2]);
 
 	server.InitServerSocket();
+	while (true)
+	{
+		server.AcceptClients();
+		if (server.getClientvector().size() == 100)
+		{
+			break;
+		}		
+	}
+
+	server.ClearClients();
+	close(server.getServerfd());
+	std::cout << "Server shut down gracefully." << std::endl;
+
 	return (0);
 }

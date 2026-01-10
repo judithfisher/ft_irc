@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 16:44:51 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/10 18:21:11 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/10 21:20:33 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,12 +36,14 @@ class Server
 		~Server();
 		
 		int getServerfd();
+		std::vector<Client> getClientvector();
+		
 		void setport(int port);
 		void setpassword(std::string password);
 		
 		void InitServerSocket();
 		void AcceptClients();
-		//void ClearClients();
+		void ClearClients();
 
 	private:
 		int		port;

@@ -6,11 +6,14 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 17:23:52 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/10 18:30:49 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/10 21:20:28 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <cstring>
+#include <iostream>
 #include "Server.hpp"
+#include <cerrno> 
 
 Server::Server()
 {
@@ -41,6 +44,11 @@ int Server::getServerfd()
 	return (this->server_fd);
 }
 
+std::vector<Client> Server::getClientvector()
+{
+	return (clients);
+}
+
 void Server::setport(int port)
 {
 	this->port = port;
@@ -67,6 +75,13 @@ void Server::InitServerSocket()
 		std::cerr << "Socket creation failed" << std::endl;
 		return;
 	}
+
+	int en = 1;
+	if (setsockopt(this->server_fd, SOL_SOCKET, SO_REUSEADDR, &en, sizeof(en)) < 0)
+	{
+		std::cerr << "Setsockopt failed" << std::endl;
+		return;
+	}
 	
 	if (bind(this->server_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0)
 	{
@@ -74,7 +89,7 @@ void Server::InitServerSocket()
 		return;
 	}
 	
-	if (listen(this->server_fd, 0) < 0)
+	if (listen(this->server_fd, SOMAXCONN) < 0)
 	{
 		std::cerr << "Listen failed" << std::endl;
 		return;
@@ -88,14 +103,30 @@ void Server::AcceptClients()
 	socklen_t client_len = sizeof(client_addr);
 	
 	client_fd = accept(server_fd, (sockaddr*)&client_addr, &client_len);
-	if (client_fd < 0)
-	{
-		std::cerr << "Error accepting client connection" << std::endl;
-		return ;
-	}
+	// if (client_fd < 0)
+	// {
+	// 	std::cerr << "Error accepting client connection" << std::endl;
+	// 	return ;
+	// }
 	if (client_fd > 0)
 	{
 		clients.push_back(Client(client_fd));
 		std::cout << "new client connected" << std::endl;
 	}
+
+}
+
+// void Server::ClearClients()
+// {
+
+// }#
+void Server::ClearClients()
+{
+    for (size_t i = 0; i < clients.size(); ++i)
+    {
+        int fd = clients[i].getFd(); // oder clients[i].fd
+        if (fd >= 0)
+            close(fd);
+    }
+    clients.clear();
 }

@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 17:25:24 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/10 19:22:51 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/10 20:45:49 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,3 +39,7 @@ Client::~Client()
 {
 }
 
+int Client::getFd()
+{
+	return (this->client_fd);
+}
