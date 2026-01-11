@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 17:23:52 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/10 21:20:28 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/11 13:16:28 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,13 @@ Server &Server::operator=(const Server &other)
 
 Server::~Server()
 {
+}
+
+void Server::SignalHandler(int signum)
+{
+	(void) signum;
+	std::cout << "Signal received, lets shut this down now!" << std::endl;
+	SignalReceived = true;	
 }
 
 int Server::getServerfd()
@@ -103,17 +110,17 @@ void Server::AcceptClients()
 	socklen_t client_len = sizeof(client_addr);
 	
 	client_fd = accept(server_fd, (sockaddr*)&client_addr, &client_len);
-	// if (client_fd < 0)
-	// {
+	if (client_fd < 0)
+	{
+		if (Server::SignalReceived)
+			return ;
 	// 	std::cerr << "Error accepting client connection" << std::endl;
 	// 	return ;
-	// }
-	if (client_fd > 0)
-	{
-		clients.push_back(Client(client_fd));
-		std::cout << "new client connected" << std::endl;
 	}
+	
 
+	clients.push_back(Client(client_fd));
+	std::cout << "new client connected" << std::endl;
 }
 
 // void Server::ClearClients()

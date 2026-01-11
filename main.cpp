@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 15:27:09 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/10 21:21:50 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/11 13:18:13 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,8 @@
 #include <iostream>
 #include <sstream>
 
-// 
+bool Server::SignalReceived = false;
+
 int main(int argc, char **argv)
 {
 	std::string input;
@@ -25,24 +26,42 @@ int main(int argc, char **argv)
 		std::cerr << "Usage: ./ft_irc <port> <password>" << std::endl;
 		return (1);
 	}
-
+	
 	Server server;
 	server.setport(std::atoi(argv[1]));
 	server.setpassword(argv[2]);
 
+	// try
+	// {
+	// 	signal(SIGINT, Server::SignalHandler);
+	// 	signal(SIGQUIT, Server::SignalHandler);
+	// 	server.InitServerSocket();
+	// 	server.AcceptClients();
+	// 	/* code */
+	// }
+	// catch(const std::exception& e)
+	// {
+	// 	server.ClearClients();
+	// 	close(server.getServerfd());
+	// 	std::cerr << e.what() << std::endl;
+	// }
+	
 	server.InitServerSocket();
-	while (true)
+	
+	while (!Server::SignalReceived)
 	{
 		server.AcceptClients();
-		if (server.getClientvector().size() == 100)
-		{
-			break;
-		}		
+		// if (server.getClientvector().size() == 100)
+		// {
+		// 	break;
+		// }		
 	}
 
-	server.ClearClients();
-	close(server.getServerfd());
-	std::cout << "Server shut down gracefully." << std::endl;
-
+	if (Server::SignalReceived)
+	{
+		server.ClearClients();
+		close(server.getServerfd());
+		std::cout << "Server shut down gracefully." << std::endl;
+	}
 	return (0);
 }
