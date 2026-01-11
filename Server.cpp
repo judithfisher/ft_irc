@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 17:23:52 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/11 14:06:13 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/11 14:07:48 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -121,15 +121,11 @@ void Server::AcceptClients()
 	std::cout << "new client connected" << std::endl;
 }
 
-// void Server::ClearClients()
-// {
-
-// }#
 void Server::ClearClients()
 {
     for (size_t i = 0; i < clients.size(); ++i)
     {
-        int fd = clients[i].getFd(); // oder clients[i].fd
+        int fd = clients[i].getFd();
         if (fd >= 0)
             close(fd);
     }
