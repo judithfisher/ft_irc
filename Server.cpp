@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 17:23:52 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/11 13:49:21 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/11 14:06:13 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,6 @@ Server::~Server()
 void Server::SignalHandler(int signum)
 {
 	(void) signum;
-	std::cout << "Signal received, lets shut this down now!" << std::endl;
 	SignalReceived = true;	
 }
 
@@ -115,14 +114,11 @@ void Server::AcceptClients()
 		if (errno == EINTR && Server::SignalReceived)
 			return ;
 	// 	std::cerr << "Error accepting client connection" << std::endl;
-	// 	return ;
+		return ;
 	}
-	
-	if (client_fd >= 0)
-	{
-		clients.push_back(Client(client_fd));
-		std::cout << "new client connected" << std::endl;
-	}
+
+	clients.push_back(Client(client_fd));
+	std::cout << "new client connected" << std::endl;
 }
 
 // void Server::ClearClients()

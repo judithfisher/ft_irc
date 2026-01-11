@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 15:27:09 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/11 13:45:18 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/11 13:57:05 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,21 +31,9 @@ int main(int argc, char **argv)
 	server.setport(std::atoi(argv[1]));
 	server.setpassword(argv[2]);
 
-	// try
-	// {
-	// 	signal(SIGINT, Server::SignalHandler);
-	// 	signal(SIGQUIT, Server::SignalHandler);
-	// 	server.InitServerSocket();
-	// 	server.AcceptClients();
-	// 	/* code */
-	// }
-	// catch(const std::exception& e)
-	// {
-	// 	server.ClearClients();
-	// 	close(server.getServerfd());
-	// 	std::cerr << e.what() << std::endl;
-	// }
-	
+	signal(SIGINT, Server::SignalHandler);
+	signal(SIGTERM, Server::SignalHandler);
+
 	server.InitServerSocket();
 	
 	while (!Server::SignalReceived)
@@ -57,12 +45,9 @@ int main(int argc, char **argv)
 		// }		
 	}
 
-	// if (Server::SignalReceived)
-	// {
-		std::cout << "Server shut down gracefully." << std::endl;
-		server.ClearClients();
-		close(server.getServerfd());
-		
-	// }
+	std::cout << "Server shut down gracefully." << std::endl;
+	server.ClearClients();
+	close(server.getServerfd());
+
 	return (0);
 }
