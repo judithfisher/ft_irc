@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 17:23:52 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/11 14:07:48 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/11 19:21:34 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,6 +71,8 @@ void Server::setpassword(std::string password)
 void Server::InitServerSocket()
 {
 	sockaddr_in addr;
+	struct pollfd NewPoll;						// we don't know what this is for yet
+	
 	addr.sin_family = AF_INET;		
 	addr.sin_port = htons(this->port);
 	addr.sin_addr.s_addr = INADDR_ANY;
@@ -88,6 +90,12 @@ void Server::InitServerSocket()
 		std::cerr << "Setsockopt failed" << std::endl;
 		return;
 	}
+
+	if (fcntl(this->server_fd, F_SETFL, O_NONBLOCK) < 0)	// we don't know this one yet
+	{
+		std::cerr << "Failed to set non-blocking mode" << std::endl;
+		return;
+	}
 	
 	if (bind(this->server_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0)
 	{
@@ -100,6 +108,11 @@ void Server::InitServerSocket()
 		std::cerr << "Listen failed" << std::endl;
 		return;
 	}
+
+	NewPoll.fd = this->server_fd;
+	NewPoll.events = POLLIN; 					// set the event to POLLIN to read data
+	NewPoll.revents = 0;						// set the revents to 0
+	fds.push_back(NewPoll);						// add the server_fd to the pollfd vector
 }
 
 void Server::AcceptClients()

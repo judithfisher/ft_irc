@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 16:44:51 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/11 13:02:55 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/11 19:56:28 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,14 +47,21 @@ class Server
 		void AcceptClients();
 		void ClearClients();
 
-		static bool	SignalReceived;		// part of class server, not individual objects --> static
+		static bool	SignalReceived;			// part of class server, not individual objects --> static
 
+		class InvalidInput : public std::exception
+		{
+			const char *what() const throw()
+				return "Port argument can only consist digits 0-9.";
+		}
+		
 	private:
 		int		port;
 		int		server_fd;	
 		
 		std::string	password;
-		std::vector<Client>	clients; 	// to keep track of connected clients + to manage their requests
+		std::vector<Client>	clients; 		// to keep track of connected clients + to manage their requests
+		std::vector<struct pollfd> fds;		// vector of pollfd, to monitor multiple file descriptors
 };
 
 #endif
