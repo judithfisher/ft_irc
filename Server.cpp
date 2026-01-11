@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 17:23:52 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/11 13:16:28 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/11 13:49:21 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -112,15 +112,17 @@ void Server::AcceptClients()
 	client_fd = accept(server_fd, (sockaddr*)&client_addr, &client_len);
 	if (client_fd < 0)
 	{
-		if (Server::SignalReceived)
+		if (errno == EINTR && Server::SignalReceived)
 			return ;
 	// 	std::cerr << "Error accepting client connection" << std::endl;
 	// 	return ;
 	}
 	
-
-	clients.push_back(Client(client_fd));
-	std::cout << "new client connected" << std::endl;
+	if (client_fd >= 0)
+	{
+		clients.push_back(Client(client_fd));
+		std::cout << "new client connected" << std::endl;
+	}
 }
 
 // void Server::ClearClients()

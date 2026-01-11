@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 15:27:09 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/11 13:18:13 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/11 13:45:18 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,11 +57,12 @@ int main(int argc, char **argv)
 		// }		
 	}
 
-	if (Server::SignalReceived)
-	{
+	// if (Server::SignalReceived)
+	// {
+		std::cout << "Server shut down gracefully." << std::endl;
 		server.ClearClients();
 		close(server.getServerfd());
-		std::cout << "Server shut down gracefully." << std::endl;
-	}
+		
+	// }
 	return (0);
 }
