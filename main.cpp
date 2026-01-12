@@ -20,12 +20,12 @@ bool Server::SignalReceived = false;
 
 int main(int argc, char **argv)
 {
-	std::string input;
-	if (argc != 3)
-	{
-		std::cerr << "Usage: ./ft_irc <port> <password>" << std::endl;
-		return (1);
-	}
+	// std::string input;  //not needed anymore?
+	// if (argc != 3)
+	// {
+	// 	std::cerr << "Usage: ./ft_irc <port> <password>" << std::endl;
+	// 	return (1);
+	// }
 	
 	Server server;
 	server.setport(std::atoi(argv[1]));
