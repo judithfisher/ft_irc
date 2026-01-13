@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 15:27:09 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/11 13:57:05 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/13 18:49:17 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,7 @@ int main(int argc, char **argv)
 		std::cout << GRN "server has been closed" R << std::endl;
 		return (1);
 	}
-
+	
 	server.setport(std::atoi(argv[1]));
 	server.setpassword(argv[2]);
 
@@ -59,7 +59,7 @@ int main(int argc, char **argv)
 		// 	break;
 		// }		
 	}
-
+	
 	std::cout << "Server shut down gracefully." << std::endl;
 	server.ClearClients();
 	close(server.getServerfd());
