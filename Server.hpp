@@ -24,11 +24,28 @@
 # include <arpa/inet.h> 			//for inet_ntoa()
 # include <poll.h> 					//for poll()
 # include <csignal> 				//for signal()
+# include <cctype>
 
 # include "Client.hpp"
 
+#define R "\033[0m"
+#define RED "\033[38;2;239;68;68m"
+#define GRN "\033[38;2;34;197;94m"
+#define BLU "\033[38;2;59;130;246m"
+#define YEL "\033[38;2;234;179;8m"
+#define PRP "\033[38;2;168;85;247m"
+#define ORN "\033[38;2;255;165;0m"
+#define BOLD "\033[1m"
+
 class Server
 {
+	private:
+		int		port;
+		int		server_fd;	
+		
+		std::string	password;
+		std::vector<Client>	clients; 		// to keep track of connected clients + to manage their requests
+		std::vector<struct pollfd> fds;		// vector of pollfd, to monitor multiple file descriptors
 	public:	
 		Server();
 		Server(const Server &other);
@@ -49,19 +66,25 @@ class Server
 
 		static bool	SignalReceived;			// part of class server, not individual objects --> static
 
+		//For try catch blockm
 		class InvalidInput : public std::exception
 		{
-			const char *what() const throw()
-				return "Port argument can only consist digits 0-9.";
-		}
+			public:
+				const char *what() const throw();
+		};
+
+		class InvalidArgsAmount : public std::exception
+		{
+			public:
+				const char*what() const throw();
+		};
 		
-	private:
-		int		port;
-		int		server_fd;	
-		
-		std::string	password;
-		std::vector<Client>	clients; 		// to keep track of connected clients + to manage their requests
-		std::vector<struct pollfd> fds;		// vector of pollfd, to monitor multiple file descriptors
+		class InvalidRange : public std::exception
+		{
+			public:
+				const char*what() const throw();
+		};
+	
 };
 
 #endif

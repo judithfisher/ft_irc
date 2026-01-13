@@ -12,6 +12,7 @@
 
 #include "Server.hpp"
 #include "Client.hpp"
+#include "checkers.hpp"
 #include <string>
 #include <iostream>
 #include <sstream>
@@ -20,14 +21,28 @@ bool Server::SignalReceived = false;
 
 int main(int argc, char **argv)
 {
-	std::string input;
-	if (argc != 3)
-	{
-		std::cerr << "Usage: ./ft_irc <port> <password>" << std::endl;
-		return (1);
-	}
+	// std::string input;
+	// if (argc != 3)
+	// {
+	// 	std::cerr << "Usage: ./ft_irc <port> <password>" << std::endl;
+	// 	return (1);
+	// }
 	
 	Server server;
+
+	try //if gonna use try catch here needs to be main init
+	{
+		check(argc, argv);
+	}
+	catch (const std::exception &e)
+	{
+		std::cout << e.what() << std::endl;
+		server.ClearClients();
+		close(server.getServerfd());
+		std::cout << GRN "server has been closed" R << std::endl;
+		return (1);
+	}
+
 	server.setport(std::atoi(argv[1]));
 	server.setpassword(argv[2]);
 
