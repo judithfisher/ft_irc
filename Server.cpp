@@ -147,10 +147,15 @@ void Server::ClearClients()
 
 const char *Server::InvalidInput::what() const throw()
 {
-	return (RED "Invalid input: " R "Port argument can only consist digits 0-9.");
+	return (RED "Invalid input: " R BLU "Port argument can only consist digits 0-9." R);
 }
 
 const char *Server::InvalidArgsAmount::what() const throw()
 {
-	return (RED "Invalid arguments amount\n"  R GRN "Usage: ./ft_irc <port> <password>");
+	return (RED "Invalid arguments amount: "  R BLU "Usage: ./ft_irc <port> <password>" R);
+}
+
+const char *Server::InvalidRange::what()  const throw()
+{
+	return (RED "invalid port number: " R BLU "try between 1024 - 65535" R);
 }

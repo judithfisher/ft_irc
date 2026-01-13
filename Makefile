@@ -17,7 +17,8 @@ FLAGS = -g -Wall -Wextra -Werror -std=c++98
 
 SRCS = 	Client.cpp \
 		main.cpp \
-		Server.cpp
+		Server.cpp \
+		checkers.cpp
 
 OBJS = $(SRCS:.cpp=.o)
 
