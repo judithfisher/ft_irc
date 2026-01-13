@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 17:23:52 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/13 18:48:50 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/13 19:17:46 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,16 +68,23 @@ void Server::setpassword(std::string password)
 // AF_INET (Address Family Internet) = IPv4
 // Sock_Stream = reliable, ordered, connection-based byte stream = TCP
 // htons = host to network short, 16 bits (port 6667-> 0x1A0B) 00001A0B -> 0B1A
+
+// fcntl = file control, manipulate file descriptor
+// O_NONBLOCK = non-blocking mode, I/O operations on the socket will be non-blocking
+// accept(), rec(), send return immediately with data or error instead of blocking
+
+
 void Server::InitServerSocket()
 {
-	sockaddr_in addr;
-	struct pollfd NewPoll;						// we don't know what this is for yet
+	sockaddr_in addr;							// from library, structure to hold server address information	
+	struct pollfd NewPoll;						// from library, structure for poll monitoring, tells poll which fds to monitor and what events to look for
 	
-	addr.sin_family = AF_INET;		
-	addr.sin_port = htons(this->port);
-	addr.sin_addr.s_addr = INADDR_ANY;
+	addr.sin_family = AF_INET;					// IPv4
+	addr.sin_port = htons(this->port);			// port number in network byte order
+	addr.sin_addr.s_addr = INADDR_ANY;			// accept connections from any IP address
 	
-	this->server_fd = socket(AF_INET, SOCK_STREAM, 0); // IPv4, TCP, default protocol
+	// this->server_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP); // IPv4, TCP, explicit protocol
+	this->server_fd = socket(AF_INET, SOCK_STREAM, 0); // IPv4, TCP, default protocol (kernel chooses TCP for SOCK_STREAM)
 	if (this->server_fd == -1)
 	{
 		std::cerr << "Socket creation failed" << std::endl;
@@ -85,13 +92,13 @@ void Server::InitServerSocket()
 	}
 
 	int en = 1;
-	if (setsockopt(this->server_fd, SOL_SOCKET, SO_REUSEADDR, &en, sizeof(en)) < 0)
+	if (setsockopt(this->server_fd, SOL_SOCKET, SO_REUSEADDR, &en, sizeof(en)) < 0) //Allows reusing the same port immediately after program restart
 	{
 		std::cerr << "Setsockopt failed" << std::endl;
 		return;
 	}
 
-	if (fcntl(this->server_fd, F_SETFL, O_NONBLOCK) < 0)	// we don't know this one yet
+	if (fcntl(this->server_fd, F_SETFL, O_NONBLOCK) < 0)	// all I/O operations on the socket will be non-blocking ( read accept do not freez server when no data is available)
 	{
 		std::cerr << "Failed to set non-blocking mode" << std::endl;
 		return;
