@@ -61,6 +61,7 @@ class Server
 		static void SignalHandler(int signum);
 
 		void InitServerSocket();
+		void Run();
 		void AcceptClients();
 		void ClearClients();
 

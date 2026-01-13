@@ -101,18 +101,20 @@ void Server::InitServerSocket()
 	if (fcntl(this->server_fd, F_SETFL, O_NONBLOCK) < 0)	// all I/O operations on the socket will be non-blocking ( read accept do not freez server when no data is available)
 	{
 		std::cerr << "Failed to set non-blocking mode" << std::endl;
+		close (this->server_fd);
 		return;
 	}
 	
-	if (bind(this->server_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0)
+	if (bind(this->server_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) //attach socket to an IP address and port. (socket will listen on this specific address:port)
 	{
 		std::cerr << "Bind failed" << std::endl;
 		return;
 	}
 	
-	if (listen(this->server_fd, SOMAXCONN) < 0)
+	if (listen(this->server_fd, SOMAXCONN) < 0) //put socket into listening  mode (allow clients to connect)
 	{
 		std::cerr << "Listen failed" << std::endl;
+		close (this->server_fd);
 		return;
 	}
 
@@ -120,6 +122,35 @@ void Server::InitServerSocket()
 	NewPoll.events = POLLIN; 					// set the event to POLLIN to read data
 	NewPoll.revents = 0;						// set the revents to 0
 	fds.push_back(NewPoll);						// add the server_fd to the pollfd vector
+
+	std::cout << "Server listening on port " << this->server_fd << std::endl;
+}
+
+// poll puts your process to sleep and wakes it when at least 1 fd becomes usable for the kind of I/O signal you care about (fds.events[i]) or when time runs out
+// poll return value = total number of fds that have been selected (fds for which the revents member is non-zero), 0 indicates time-out (no fds selected), -1 some error or CRTL+C
+void Server::Run()
+{
+	while (true)
+	{
+		int poll_count = poll(fds.data(), fd.size(), -1); // -1 = no time-out
+		if (poll_count == -1)
+		{
+			std::cerr << "Poll failed " << std::endl;
+			break ;  
+		}
+
+		for (size_t i = 0; i < fds.size(), i++)
+		{
+			if (fds[i].revents & POLLIN)
+			{
+				if (fds[i].fd == this->server_fd) 	// is it server socket? new client connecting
+					AcceptClients();
+				else								// client socket
+					// ReceiveData(fds[i].fd);
+
+			}
+		}
+	}
 }
 
 void Server::AcceptClients()
