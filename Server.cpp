@@ -147,7 +147,7 @@ void Server::ClearClients()
 
 const char *Server::InvalidInput::what() const throw()
 {
-	return (RED "Invalid input: " R BLU "Port argument can only consist digits 0-9." R);
+	return (RED "Invalid input: " R BLU "Port argument can only consist digits 0-9.\n (Note: zero as first digit is also not allowed)" R);
 }
 
 const char *Server::InvalidArgsAmount::what() const throw()

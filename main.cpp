@@ -30,7 +30,7 @@ int main(int argc, char **argv)
 
 	Server server;
 
-	try //if gonna use try catch here needs to be main init function
+	try //if gonna use try catch here needs to be main init
 	{
 		check(argc, argv);
 	}
