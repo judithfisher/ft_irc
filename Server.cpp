@@ -162,7 +162,7 @@ const char *Server::InvalidRange::what()  const throw()
 
 const char *Server::PassLengh::what() const throw()
 {
-	return ( RED "Password lengh restictions: between 3 to 16 characters" R);
+	return ( RED "Password should be between 3 to 16 characters" R);
 } 
 
 const char *Server::PassAsciOnly::what() const throw()
