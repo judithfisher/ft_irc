@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 16:45:13 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/10 20:45:15 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/17 17:27:07 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,11 +27,13 @@ class Client
 
 		int getFd();
 
+		void AppendToBuffer(const std::string &rec_buffer);
+
 	private:
-		//sockaddr_in client_addr;
-		// Server *server;
+		int				client_fd;
+		unsigned int   MAX_BUFFER_SIZE;
 		
-		int client_fd;
+		std::string buffer;
 		std::string nickname;
 		std::string username;
 

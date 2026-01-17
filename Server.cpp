@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 17:23:52 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/17 15:40:32 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/17 17:53:57 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -146,7 +146,7 @@ void Server::RunServer()
 				if (fds[i].fd == this->server_fd) 	// is it server socket? new client connecting
 					AcceptClients();
 				else								// client socket
-					ReceiveData(fds[i].fd);
+					ReceiveData(fds[i].fd);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                .fd);
 			}
 
 			if (fds[i].revents & (POLLERR | POLLHUP | POLLNVAL))	// POLLHUP = hang up (client disconnected), POLLNVAL = invalid fd, POLLERR = error on the existing fd
@@ -180,16 +180,74 @@ void Server::AcceptClients()
 		std::cout << "New client connected, client_fd: " << clients.back().getFd() <<  " total clients: " << clients.size() << std::endl;
 	}
 }
+// //Claude version, delete again
+// void Server::ReceiveData(int client_fd)
+// {
+//     char buffer[1024];
+//     int bytes_received = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
+    
+//     if (bytes_received <= 0)
+//     {
+//         if (bytes_received == 0)
+//             std::cout << "Client disconnected, client_fd: " << client_fd << std::endl;
+//         else
+//             std::cerr << "Recv failed for client_fd: " << client_fd << std::endl;
+//         RemoveClient(client_fd);
+//         return;
+//     }
+    
+//     buffer[bytes_received] = '\0';
+//     std::cout << "Received " << bytes_received << " bytes from fd " << client_fd << std::endl;
+    
+//     // ✅ APPEND TO CLIENT'S BUFFER (handles partial data)
+//     clients[client_fd].AppendToBuffer(buffer);
+    
+//     // ✅ EXTRACT COMPLETE COMMANDS (ending in \r\n)
+//     std::vector<std::string> commands = clients[client_fd].ExtractCompleteCommands();
+    
+//     // ✅ PROCESS EACH COMPLETE COMMAND
+//     for (size_t i = 0; i < commands.size(); i++)
+//     {
+//         std::cout << "Processing command: " << commands[i] << std::endl;
+//         ProcessCommand(client_fd, commands[i]);
+//     }
+// }
+
+/*
+─────────────────────────────────────────────────┐
+│              CLIENT BUFFER (string)            │
+├────────────────────────────────────────────────┤
+│                                                │
+│  AppendToBuffer("NI")                          │
+│  ↓                                             │
+│  buffer = "NI"                                 │
+│                                                │
+│  AppendToBuffer("CK alice\r\n")                │
+│  ↓                                               │
+│  buffer = "NICK alice\r\n"                      │
+│                                                  │
+│  ExtractCompleteCommands()                      │
+│  ↓                                               │
+│  Found: "NICK alice"                            │
+│  buffer = "" (cleared)                          │
+│  Returns: ["NICK alice"]                        │
+│                                                  │
+
+*/
 
 void Server::ReceiveData(int client_fd)
 {
-	char buffer[1024];
+	char buffer[2048];
+	buffer[0] = '\0';
 	int bytes_received = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
-	
+
 	if (bytes_received <= 0)
 	{
 		if (bytes_received == 0)
+		{
+			std::cout << "No spamming allowed, you fool! Exceeded maximum buffer size. " << std::endl;
 			std::cout << "Client disconnected, client_fd: " << client_fd << std::endl;
+		}
 		else
 			std::cerr << "Recv failed for client_fd: " << client_fd << " Error: " << strerror(errno) << std::endl;
 		RemoveClient(client_fd);
@@ -198,6 +256,13 @@ void Server::ReceiveData(int client_fd)
 	
 	buffer[bytes_received] = '\0'; // Null-terminate the received data
 	std::cout << "Receiving data from client_fd: " << client_fd << std::endl;
+
+	std::string str_buffer(buffer, bytes_received);			// std::string(buffer, bytes_received) Constructor for string
+	clients[client_fd].AppendToBuffer(str_buffer);	
+	// extract complete commands from client buffer
+	// process commands, buffer hier leeren
+
+	std::cout << buffer << std::endl;
 }
 
 void Server::RemoveClient(int client_fd)
