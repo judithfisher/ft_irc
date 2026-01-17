@@ -25,6 +25,7 @@
 # include <poll.h> 					//for poll()
 # include <csignal> 				//for signal()
 # include <cctype>					//for isdigit()
+# include <cstring>					//for strlen()
 
 # include "Client.hpp"
 
@@ -76,13 +77,19 @@ class Server
 		class InvalidArgsAmount : public std::exception
 		{
 			public:
-				const char*what() const throw();
+				const char *what() const throw();
 		};
 		
 		class InvalidRange : public std::exception
 		{
 			public:
-				const char*what() const throw();
+				const char *what() const throw();
+		};
+
+		class PassLengh : public std::exception
+		{
+			public:
+				const char *what() const throw();
 		};
 };
 

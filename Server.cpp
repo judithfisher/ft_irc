@@ -159,3 +159,8 @@ const char *Server::InvalidRange::what()  const throw()
 {
 	return (RED "invalid port number: " R BLU "try between 1024 - 65535" R);
 }
+
+const char *Server::PassLengh::what() const throw()
+{
+	return ( RED "Password lengh restictions: between 3 to 16 characters");
+} 

@@ -1,10 +1,13 @@
 
 #include "checkers.hpp"
 
-/* 
-SHOULD BE CHECKED FOR:?????????
-    - check for bigger than in t before entering functions?
-*/
+static void check_pass_lengh(const char*argv)
+{
+    std::cout << strlen(argv) << std::endl;
+    if(strlen(argv) < 3 || strlen(argv) > 16)
+        throw Server::PassLengh();
+    
+}
 
 static void chck_no_front_zero(const char *argv)
 {
@@ -41,5 +44,5 @@ void check(int argc, char **argv)
     chck_numbers_only(argv[1]);
     chck_port_range(argv[1]);
     chck_no_front_zero(argv[1]);
-
+    check_pass_lengh(argv[2]);
 }
