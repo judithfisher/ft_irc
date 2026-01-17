@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 16:44:51 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/17 12:56:18 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/17 14:46:21 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@
 # include <arpa/inet.h> 			//for inet_ntoa()
 # include <poll.h> 					//for poll()
 # include <csignal> 				//for signal()
+# include <algorithm> 				//for find()
 # include <cctype>
 
 # include "Client.hpp"
@@ -63,8 +64,9 @@ class Server
 
 		void InitServerSocket();
 		void RunServer();
-		void ReceiveData();
 		void AcceptClients();
+		void ReceiveData(int client_fd);
+		void RemoveClient(int client_fd);
 		void ClearClients();
 
 		static bool	SignalReceived;			// part of class server, not individual objects --> static

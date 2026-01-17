@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 17:23:52 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/17 14:15:27 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/17 15:40:32 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -145,17 +145,14 @@ void Server::RunServer()
 			{
 				if (fds[i].fd == this->server_fd) 	// is it server socket? new client connecting
 					AcceptClients();
-				// else								// client socket
-					// ReceiveData(fds[i].fd);
+				else								// client socket
+					ReceiveData(fds[i].fd);
 			}
 
-		
 			if (fds[i].revents & (POLLERR | POLLHUP | POLLNVAL))	// POLLHUP = hang up (client disconnected), POLLNVAL = invalid fd, POLLERR = error on the existing fd
 			{
 				std::cerr << "Error on fd: " << fds[i].fd << std::endl;
-				close(fds[i].fd);
-				fds.erase(fds.begin() + i);
-				--i; 												// Adjust index after erasing
+				RemoveClient(fds[i].fd);
 			}
 		}
 	}
@@ -186,7 +183,45 @@ void Server::AcceptClients()
 
 void Server::ReceiveData(int client_fd)
 {
+	char buffer[1024];
+	int bytes_received = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
+	
+	if (bytes_received <= 0)
+	{
+		if (bytes_received == 0)
+			std::cout << "Client disconnected, client_fd: " << client_fd << std::endl;
+		else
+			std::cerr << "Recv failed for client_fd: " << client_fd << " Error: " << strerror(errno) << std::endl;
+		RemoveClient(client_fd);
+		return;
+	}
+	
+	buffer[bytes_received] = '\0'; // Null-terminate the received data
+	std::cout << "Receiving data from client_fd: " << client_fd << std::endl;
+}
 
+void Server::RemoveClient(int client_fd)
+{
+	close (client_fd);
+    for (size_t i = 0; i < fds.size(); i++)
+    {
+        if (fds[i].fd == client_fd)
+        {
+            fds.erase(fds.begin() + i);
+			std::cout << "Pollfd removed, client_fd: " << client_fd << " total fds: " << fds.size() << std::endl;
+            break;  							// Found it, stop searching
+        }
+    }
+
+	for (size_t i = 0; i < clients.size(); i++)
+	{
+		if (clients[i].getFd() == client_fd)
+		{
+			clients.erase(clients.begin() + i);
+			std::cout << "Client removed, client_fd: " << client_fd << " total clients: " << clients.size() << std::endl;
+			break;
+		}
+	}
 }
 
 void Server::ClearClients()
