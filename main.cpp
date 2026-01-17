@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 15:27:09 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/13 18:59:26 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/17 13:49:58 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,15 +33,15 @@ int main(int argc, char **argv)
 		server.setport(std::atoi(argv[1]));
 		server.setpassword(argv[2]);
 		server.InitServerSocket();
-
-		while (!Server::SignalReceived)
-		{
-			server.AcceptClients();
-			// if (server.getClientvector().size() == 100)
-			// {
-			// 	break;
-			// }		
-		}
+		server.RunServer();
+		// while (!Server::SignalReceived)
+		// {
+		// 	server.AcceptClients();
+		// 	// if (server.getClientvector().size() == 100)
+		// 	// {
+		// 	// 	break;
+		// 	// }		
+		// }
 	}
 	
 	catch (const std::exception &e)

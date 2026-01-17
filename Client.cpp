@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 17:25:24 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/10 20:45:49 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/17 13:36:54 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 
 Client::Client(int client_fd): client_fd(client_fd)
 {
-	std::cout << "This is my client fd: " << this->client_fd << std::endl;
+	// std::cout << "This is my client fd: " << this->client_fd << std::endl;
 }	
 
 Client::Client(const Client &other)

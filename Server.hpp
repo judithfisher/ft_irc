@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 16:44:51 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/11 19:56:28 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/17 12:56:18 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,6 +46,7 @@ class Server
 		std::string	password;
 		std::vector<Client>	clients; 		// to keep track of connected clients + to manage their requests
 		std::vector<struct pollfd> fds;		// vector of pollfd, to monitor multiple file descriptors
+		
 	public:	
 		Server();
 		Server(const Server &other);
@@ -61,7 +62,8 @@ class Server
 		static void SignalHandler(int signum);
 
 		void InitServerSocket();
-		void Run();
+		void RunServer();
+		void ReceiveData();
 		void AcceptClients();
 		void ClearClients();
 

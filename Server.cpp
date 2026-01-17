@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 17:23:52 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/13 19:17:46 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/17 14:15:27 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -128,26 +128,34 @@ void Server::InitServerSocket()
 
 // poll puts your process to sleep and wakes it when at least 1 fd becomes usable for the kind of I/O signal you care about (fds.events[i]) or when time runs out
 // poll return value = total number of fds that have been selected (fds for which the revents member is non-zero), 0 indicates time-out (no fds selected), -1 some error or CRTL+C
-void Server::Run()
+void Server::RunServer()
 {
-	while (true)
+	while (SignalReceived == false)
 	{
-		int poll_count = poll(fds.data(), fd.size(), -1); // -1 = no time-out
+		int poll_count = poll(fds.data(), fds.size(), -1); // -1 = no time-out
 		if (poll_count == -1)
 		{
 			std::cerr << "Poll failed " << std::endl;
 			break ;  
 		}
 
-		for (size_t i = 0; i < fds.size(), i++)
+		for (size_t i = 0; i < fds.size(); i++)
 		{
 			if (fds[i].revents & POLLIN)
 			{
 				if (fds[i].fd == this->server_fd) 	// is it server socket? new client connecting
 					AcceptClients();
-				else								// client socket
+				// else								// client socket
 					// ReceiveData(fds[i].fd);
+			}
 
+		
+			if (fds[i].revents & (POLLERR | POLLHUP | POLLNVAL))	// POLLHUP = hang up (client disconnected), POLLNVAL = invalid fd, POLLERR = error on the existing fd
+			{
+				std::cerr << "Error on fd: " << fds[i].fd << std::endl;
+				close(fds[i].fd);
+				fds.erase(fds.begin() + i);
+				--i; 												// Adjust index after erasing
 			}
 		}
 	}
@@ -156,20 +164,29 @@ void Server::Run()
 void Server::AcceptClients()
 {
 	int client_fd;
-	sockaddr_in client_addr;
-	socklen_t client_len = sizeof(client_addr);
-	
-	client_fd = accept(server_fd, (sockaddr*)&client_addr, &client_len);
-	if (client_fd < 0)
-	{
-		if (errno == EINTR && Server::SignalReceived)
-			return ;
-	// 	std::cerr << "Error accepting client connection" << std::endl;
-		return ;
-	}
+	struct pollfd NewPoll;
+	// sockaddr_in client_addr;									// not needed if client address is not used
+	// socklen_t client_len = sizeof(client_addr);				// not needed if client address is not used
 
-	clients.push_back(Client(client_fd));
-	std::cout << "new client connected" << std::endl;
+	while (SignalReceived == false)
+	{
+		// client_fd = accept(server_fd, (sockaddr*)&client_addr, &client_len);
+		client_fd = accept(server_fd, NULL, NULL);				// if client address is not needed, NULL can be passed as 2nd and 3rd argument
+		if (client_fd < 0)
+			break ;
+		fcntl(client_fd, F_SETFL, O_NONBLOCK);					// set client socket to non-blocking mode
+		NewPoll.fd = client_fd;
+		NewPoll.events = POLLIN;
+		NewPoll.revents = 0;
+		fds.push_back(NewPoll);
+		clients.push_back(Client(client_fd));					// not sure if vector of clients is needed
+		std::cout << "New client connected, client_fd: " << clients.back().getFd() <<  " total clients: " << clients.size() << std::endl;
+	}
+}
+
+void Server::ReceiveData(int client_fd)
+{
+
 }
 
 void Server::ClearClients()
