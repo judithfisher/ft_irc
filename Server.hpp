@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 16:44:51 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/17 14:46:21 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/17 18:31:39 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,6 +66,7 @@ class Server
 		void RunServer();
 		void AcceptClients();
 		void ReceiveData(int client_fd);
+		void ProcessCommand(int client_fd, const std::string &command);
 		void RemoveClient(int client_fd);
 		void ClearClients();
 

@@ -6,14 +6,14 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 17:25:24 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/17 17:32:15 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/17 19:34:18 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 #include "Client.hpp"
 
-Client::Client(int client_fd): client_fd(client_fd), MAX_BUFFER_SIZE(2048)
+Client::Client(int client_fd): client_fd(client_fd)
 {
 	// std::cout << "This is my client fd: " << this->client_fd << std::endl;
 }	
@@ -49,4 +49,20 @@ void Client::AppendToBuffer(const std::string &rec_buffer)
 	buffer += rec_buffer;
 	if (buffer.size() > MAX_BUFFER_SIZE)
 		throw std::runtime_error("No spamming allowed, you fool! Exceeded maximum buffer size.");
+}
+
+// "USER test\r\nJOIN #chan\r\nPRIVMSG #chan :Hi\r\n"
+std::vector<std::string> Client::ExtractCompleteCommands()
+{
+	size_t pos;
+	std::string line;
+	std::vector<std::string> commands;
+	
+	while ((pos = buffer.find("\r\n")) != std::string::npos)
+	{
+		line = buffer.substr(0, pos); 				// Extract command up to \r\n
+		commands.push_back(line); 					// Store the complete command
+		buffer.erase(0, pos +2); 					// Remove extracted command from buffer including \r\n
+	}
+	return (commands);
 }
