@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 17:25:24 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/17 19:34:18 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/17 21:23:30 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,9 +54,10 @@ void Client::AppendToBuffer(const std::string &rec_buffer)
 // "USER test\r\nJOIN #chan\r\nPRIVMSG #chan :Hi\r\n"
 std::vector<std::string> Client::ExtractCompleteCommands()
 {
+	std::vector<std::string> commands;
 	size_t pos;
 	std::string line;
-	std::vector<std::string> commands;
+	
 	
 	while ((pos = buffer.find("\r\n")) != std::string::npos)
 	{

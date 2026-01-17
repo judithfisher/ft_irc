@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 17:23:52 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/17 19:51:53 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/17 20:59:39 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -231,24 +231,28 @@ void Server::ReceiveData(int client_fd)
 		ProcessCommand(client_fd, commands[i]);		// implement command processing logic here
 }
 
-// std::vector<std::string> split(const std::string& line)
-// {
-//     std::vector<std::string> tokens;
-//     std::istringstream istreami(line);
-//     std::string t;
-
-//     while (istreami >> t)
-//         tokens.push_back(t);
-
-//     return tokens;
-// }
-
-
-
-void Server::ProcessCommand(int client_fd, const std::string &command)
+std::vector<std::string> split(const std::string& line)
 {
-	if (command.empty())
+    std::vector<std::string> tokens;
+    std::istringstream istreami(line);
+    std::string t;
+
+    while (istreami >> t)
+        tokens.push_back(t);
+
+    return (tokens);
+}
+
+
+
+void Server::ProcessCommand(int client_fd, const std::string &line)
+{
+	std::vector<std::string> tokens = split(line);
+	
+	if (tokens.empty())
 		return;
+		
+	const std::string &command = tokens[0];
 
 	if (command == "QUIT")					// just a check
 	{

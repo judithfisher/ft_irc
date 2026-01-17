@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 16:44:51 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/17 18:31:39 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/17 20:56:08 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,7 @@
 # include <poll.h> 					//for poll()
 # include <csignal> 				//for signal()
 # include <algorithm> 				//for find()
+# include <sstream> 				//for istringstream
 # include <cctype>
 
 # include "Client.hpp"
