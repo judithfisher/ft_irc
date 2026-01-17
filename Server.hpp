@@ -24,7 +24,7 @@
 # include <arpa/inet.h> 			//for inet_ntoa()
 # include <poll.h> 					//for poll()
 # include <csignal> 				//for signal()
-# include <cctype>					//for isdigit()
+# include <cctype>					//for isdigit() isascii()
 # include <cstring>					//for strlen()
 
 # include "Client.hpp"
@@ -90,6 +90,11 @@ class Server
 		{
 			public:
 				const char *what() const throw();
+		};
+		
+		class PassAsciOnly : public std::exception
+		{
+			const char *what() const throw();
 		};
 };
 
