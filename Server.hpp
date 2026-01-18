@@ -26,7 +26,8 @@
 # include <csignal> 				//for signal()
 # include <algorithm> 				//for find()
 # include <sstream> 				//for istringstream
-# include <cctype>
+# include <cctype>					//for isdigit() isascii()
+# include <cstring>					//for strlen()
 
 # include "Client.hpp"
 
@@ -90,6 +91,16 @@ class Server
 		{
 			public:
 				const char*what() const throw();
+		};
+		class PassLengh : public std::exception
+		{
+			public:
+				const char *what() const throw();
+		};
+		
+		class PassAsciOnly : public std::exception
+		{
+			const char *what() const throw();
 		};
 	
 };

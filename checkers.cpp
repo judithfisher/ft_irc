@@ -1,5 +1,19 @@
-
 #include "checkers.hpp"
+
+static void check_pass_ascii(const char*argv)
+{
+    for( int i = 0; argv[i]; i++)
+    {
+         if(!(argv[i] > 0 && argv[i] < 127))
+            throw Server::PassAsciOnly();
+    }
+}
+
+static void check_pass_lengh(const char*argv)
+{
+    if(strlen(argv) < 3 || strlen(argv) > 16)
+        throw Server::PassLengh();
+}
 
 static void chck_no_front_zero(const char *argv)
 {
@@ -35,6 +49,6 @@ void check(int argc, char **argv)
     chck_numbers_only(argv[1]);
     chck_port_range(argv[1]);
     chck_no_front_zero(argv[1]);
-
+    check_pass_lengh(argv[2]);
+    check_pass_ascii(argv[2]);
 }
-
