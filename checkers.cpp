@@ -1,3 +1,4 @@
+#include "checkers.hpp"
 
 #include "checkers.hpp"
 
@@ -25,7 +26,6 @@ static void chck_no_front_zero(const char *argv)
 static void chck_port_range(const char *arg)
 {
     int nbr = std::atoi(arg);
-    std::cout << nbr << std::endl;
     if (nbr < 1024 || nbr > 65535)
         throw Server::InvalidRange();
 }

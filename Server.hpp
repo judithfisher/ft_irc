@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 16:44:51 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/11 19:56:28 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/17 20:56:08 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,8 @@
 # include <arpa/inet.h> 			//for inet_ntoa()
 # include <poll.h> 					//for poll()
 # include <csignal> 				//for signal()
+# include <algorithm> 				//for find()
+# include <sstream> 				//for istringstream
 # include <cctype>					//for isdigit() isascii()
 # include <cstring>					//for strlen()
 
@@ -47,6 +49,7 @@ class Server
 		std::string	password;
 		std::vector<Client>	clients; 		// to keep track of connected clients + to manage their requests
 		std::vector<struct pollfd> fds;		// vector of pollfd, to monitor multiple file descriptors
+		
 	public:	
 		Server();
 		Server(const Server &other);
@@ -62,7 +65,11 @@ class Server
 		static void SignalHandler(int signum);
 
 		void InitServerSocket();
+		void RunServer();
 		void AcceptClients();
+		void ReceiveData(int client_fd);
+		void ProcessCommand(int client_fd, const std::string &command);
+		void RemoveClient(int client_fd);
 		void ClearClients();
 
 		static bool	SignalReceived;			// part of class server, not individual objects --> static
@@ -77,15 +84,14 @@ class Server
 		class InvalidArgsAmount : public std::exception
 		{
 			public:
-				const char *what() const throw();
+				const char*what() const throw();
 		};
 		
 		class InvalidRange : public std::exception
 		{
 			public:
-				const char *what() const throw();
+				const char*what() const throw();
 		};
-
 		class PassLengh : public std::exception
 		{
 			public:
@@ -96,6 +102,7 @@ class Server
 		{
 			const char *what() const throw();
 		};
+	
 };
 
 #endif

@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 16:45:13 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/10 20:45:15 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/17 19:34:24 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,8 @@
 # define CLIENT_HPP
 
 # include "Server.hpp"
+
+# define MAX_BUFFER_SIZE 2048
 
 class Server;
 
@@ -27,11 +29,14 @@ class Client
 
 		int getFd();
 
-	private:
-		//sockaddr_in client_addr;
-		// Server *server;
+		void AppendToBuffer(const std::string &rec_buffer);
+		std::vector<std::string> ExtractCompleteCommands();
 		
-		int client_fd;
+
+	private:
+		int				client_fd;
+
+		std::string buffer;
 		std::string nickname;
 		std::string username;
 
