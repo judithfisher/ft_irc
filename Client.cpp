@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 17:25:24 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/17 21:23:30 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/18 14:49:48 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,18 +52,25 @@ void Client::AppendToBuffer(const std::string &rec_buffer)
 }
 
 // "USER test\r\nJOIN #chan\r\nPRIVMSG #chan :Hi\r\n"
+// netcat only sends \n not \r\n, so we need to handle that case too
 std::vector<std::string> Client::ExtractCompleteCommands()
 {
 	std::vector<std::string> commands;
-	size_t pos;
-	std::string line;
-	
-	
-	while ((pos = buffer.find("\r\n")) != std::string::npos)
+
+	while (true)
 	{
-		line = buffer.substr(0, pos); 				// Extract command up to \r\n
-		commands.push_back(line); 					// Store the complete command
-		buffer.erase(0, pos +2); 					// Remove extracted command from buffer including \r\n
+		size_t pos = buffer.find('\n');
+		
+		if (pos == std::string::npos)
+			break;
+	
+		std::string line = buffer.substr(0, pos); 				// Extract command up to \n
+		if (!line.empty() && line[line.length() - 1] == '\r')
+			line.erase(line.length() - 1);						// Remove trailing \r if present
+
+		if (!line.empty())
+			commands.push_back(line); 							// Store the complete command
+		buffer.erase(0, pos + 1); 								// Remove extracted command from buffer including \n
 	}
 	return (commands);
 }
