@@ -13,7 +13,7 @@
 #include "Server.hpp"
 #include "Client.hpp"
 
-Client::Client(int client_fd): client_fd(client_fd)
+Client::Client(int client_fd): client_fd(client_fd), passAccepted(false), registered(false)
 {
 	// std::cout << "This is my client fd: " << this->client_fd << std::endl;
 }	
@@ -23,13 +23,16 @@ Client::Client(const Client &other)
 	*this = other;
 }
 
-Client &Client::operator=(const Client &other)
+Client &Client::operator=(const Client &other) 
 {
 	if (this != &other)
 	{
 		this->client_fd = other.client_fd;
 		this->nickname = other.nickname;
 		this->username = other.username;
+		this->password = othr.password;
+		this->passAccepted = other.passAccepted;
+		this->registered = other.registered;
 		// copy attributes here when added
 	}
 	return (*this);
@@ -43,6 +46,59 @@ int Client::getFd()
 {
 	return (this->client_fd);
 }
+
+bool Client::getPassAccepted() const
+{
+	return (this->passAccepted);
+}
+
+void Client::setPassAcceptedtrue()
+{
+	this->passAccepted = true
+}
+
+bool Client::getRegistered() const
+{
+	return this->registered;
+}
+
+void Client::setRegisteredTrue()
+{
+	this->registered = true;
+}
+
+void Client::setPassword(const std::string &pass)
+{
+	this->password = pass;
+}
+
+void Client::setNick(const std::string nick)
+{
+	this->nickname = nick;
+}
+
+void Client::setUser(const std::string user);
+{
+	this->username = user;
+}
+
+bool Client::check_nick_user_filled()
+{
+	if ((!this->nickname.empty()) && (!this->username.empty()))
+		return true;
+	else
+		return false;
+}
+
+const std::string& Client::getNick()
+{
+	return (this->nickname);
+}
+const std::string& Client::getUser()
+{
+
+}
+
 
 void Client::AppendToBuffer(const std::string &rec_buffer)
 {

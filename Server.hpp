@@ -102,7 +102,6 @@ class Server
 		{
 			const char *what() const throw();
 		};
-	
 };
 
 #endif

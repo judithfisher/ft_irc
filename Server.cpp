@@ -178,6 +178,8 @@ void Server::AcceptClients()
 		fds.push_back(NewPoll);
 		clients.push_back(Client(client_fd));					// not sure if vector of clients is needed
 		std::cout << "New client connected, client_fd: " << clients.back().getFd() <<  " total clients: " << clients.size() << std::endl;
+		std::string msg = "Server:" GRN "To send messages and stay connected you need to enter connection password.\n You have 3 chances to do so.\nUpon 3rd failure you will be disconnected.\n Usage: <PASS> <password>\n" R
+		send(client_fd, msg.c_str(), msg.size(), 0) //should send msg to client
 	}
 }
 
@@ -203,6 +205,13 @@ void Server::AcceptClients()
 └────────────────────────────────────────────────┘
 */
 
+/* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+client[cliend_fd] - is it valid? not always file descriptor will represents order in vector.
+if we have fd 5 but we delete client 4 ans 3 , then client with fd 5 will land on position nbr 3
+and then order number in vector and fd number r different???
+Thats my question to understand
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+??????????????????????????????????? */
 void Server::ReceiveData(int client_fd)
 {
 	char buffer[MAX_BUFFER_SIZE + 1]; // +1 for null-terminator
@@ -243,28 +252,108 @@ std::vector<std::string> split(const std::string& line)
     return (tokens);
 }
 
-
-
 void Server::ProcessCommand(int client_fd, const std::string &line)
 {
 	std::vector<std::string> tokens = split(line);
-	
 	if (tokens.empty())
 		return;
-		
 	const std::string &command = tokens[0];
 
-	if (command == "QUIT")					// just a check
+	std::string pass;
+	if(tokens.size() > 1)
+		pass = tokens[1]; // to compare word right after PASS with server password
+	elase
+		pass = "";
+	std::string not_reg_yet = ":server 451 :You have not registered\r\n";
+	std::string unknown_command = ":server 421" + command + ":Unknown command\r\n";
+	std::string need_more_param = ":server 461" + command + ":Not enough parameters\r\n";
+	std::string wrong_pass = ":server 464 * :Password incorrect\r\n";
+
+	int j = 0;
+	for (size_t i = 0; i < clients.size(); i++) //find client with fd we r getting connection/input from
+		if(clients[i].getFd() == client_fd)
+		{
+			j = i;
+			break;
+		}
+
+	if(clients[j].getPassAccepted == false) //check did client registered connection passwrod. Needs to be done as very first thing
 	{
-		std::cout << "Client requested to quit, client_fd: " << client_fd << std::endl;
-		RemoveClient(client_fd);
-		return;
+		if(command != "PASS")
+		{
+			send(client_fd, not_reg_yet.c_string(), not_reg_yet.size(), 0);
+			return;
+		}
+		else if(command == "PASS") // check for password correction
+		{
+			if(pass.empty()) //empty() returns true if emptyfalse if not empty
+			{
+				send(client_fd, need_more_param.c_string(), need_more_param.size(), 0);
+				return;
+			}
+			else if(!pass.empty()) //check does password matches the server password
+			{
+				if(pass != this->password)
+				{
+					send(client_fd, wrong_pass_msg.c_string(), wrong_pass_msg.size(), 0);
+					return;
+				}
+				else if(pass == this->password)	
+				{
+					clients[j].setPassword(pass);
+					clients[j].setPassAcceptedTrue();
+					return;
+				}
+			}		
+		}
 	}
-	std::cout << "Received command from client_fd " << client_fd << ": " << command << std::endl; 	// just for testing
-	
-		// if PRIVMSG send message to target
-		// if JOIN add client to channel
-		// etc...
+	else if(clients[j].getPassAccepted() == true && clients[j].getRegistered() == false) 
+	{
+		if(command != "NICK" && command != "USER")
+		{
+			send(client_fd, not_reg_yet.c_string(), not_reg_yet.size(), 0);
+			return;
+		}
+		else if(command == "NICK")
+		{
+			if(pass.empty()) //empty() returns true if emptyfalse if not empty
+			{
+				send(client_fd, need_more_param.c_string(), need_more_param.size(), 0);
+				return;
+			}
+			else if(!pass.empty()) //check does password matches the server password
+			{
+					clients[j].setNick(pass);
+					return;
+			}	
+		}
+		else if(command == "USER")
+		{
+			if(pass.empty()) //empty() returns true if emptyfalse if not empty
+			{
+				send(client_fd, need_more_param.c_string(), need_more_param.size(), 0);
+				return;
+			}
+			else if(!pass.empty()) //check does password matches the server password
+			{
+					clients[j].setNick(pass);
+					return;
+			}	
+		}
+		if(client[j].check_nick_user_filled())
+		{
+			std::string registered = ":server 001" + client[j].getNick() + ":Welcome to the IRC network" + client[j].getNick() + "\r\n"
+			client[j].setRegisteredTrue();
+			send(client_fd, registered.c_string(), registered.size(), 0);
+			return;
+		}
+	}
+	else if(clients[j].getPassAccepted() == true && clients[j].getRegistered() == true) 
+	{
+		/* here commands to finish
+		 and then split it into smaller parts */
+	}
+
 }
 
 void Server::RemoveClient(int client_fd)
@@ -324,5 +413,7 @@ const char *Server::PassLengh::what() const throw()
 
 const char *Server::PassAsciOnly::what() const throw()
 {
-		return( RED "Password can only consist ASCII characters" R);
+	return( RED "Password can only consist ASCII characters" R);
 }
+
+
