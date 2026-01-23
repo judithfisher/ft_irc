@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
+/*   By: judith <judith@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 17:23:52 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/17 20:59:39 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/23 11:52:14 by judith           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -123,7 +123,7 @@ void Server::InitServerSocket()
 	NewPoll.revents = 0;						// set the revents to 0
 	fds.push_back(NewPoll);						// add the server_fd to the pollfd vector
 
-	std::cout << "Server listening on port " << this->server_fd << std::endl;
+	std::cout << "Server listening on fd: " << this->server_fd << std::endl;
 }
 
 // poll puts your process to sleep and wakes it when at least 1 fd becomes usable for the kind of I/O signal you care about (fds.events[i]) or when time runs out
@@ -243,8 +243,6 @@ std::vector<std::string> split(const std::string& line)
     return (tokens);
 }
 
-
-
 void Server::ProcessCommand(int client_fd, const std::string &line)
 {
 	std::vector<std::string> tokens = split(line);
@@ -254,7 +252,7 @@ void Server::ProcessCommand(int client_fd, const std::string &line)
 		
 	const std::string &command = tokens[0];
 
-	if (command == "QUIT")					// just a check
+	if (command == "QUIT")
 	{
 		std::cout << "Client requested to quit, client_fd: " << client_fd << std::endl;
 		RemoveClient(client_fd);
