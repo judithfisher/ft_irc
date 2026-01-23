@@ -31,6 +31,10 @@ class Channel
         void setUserLimit(int limit);
 
     private:
+        std::vector<int> users;
+        std::vector<int> operators;
+        std::vector<int> invitedUsers;
+
         std::string name;
         std::string topic;
         std::string password;
