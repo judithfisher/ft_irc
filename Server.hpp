@@ -71,6 +71,7 @@ class Server
 		void ProcessCommand(int client_fd, const std::string &command);
 		void RemoveClient(int client_fd);
 		void ClearClients();
+		// bool HasColone();
 
 		static bool	SignalReceived;			// part of class server, not individual objects --> static
 

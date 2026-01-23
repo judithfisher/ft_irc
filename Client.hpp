@@ -27,6 +27,7 @@ class Client
 		std::string password;
 		std::string nickname;
 		std::string username;
+		std::string realname;
 		bool passAccepted;
 		bool registered;
 
@@ -44,11 +45,11 @@ class Client
 		void setPassword(const std::string &pass);
 		void setNick(const std::string nick);
 		void setUser(const std::string user);
+		void setRealname(const std::string real);
 		bool check_nick_user_filled();
 		const std::string& getNick() const;
 		const std::string& getUser() const;
-		// const std::string& getNick(); //return info by constant reference to not modyfie anything by accident 
-		// const std::string& getUser();
+		const std::string& getRealname() const;
 
 
 		void AppendToBuffer(const std::string &rec_buffer);

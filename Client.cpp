@@ -30,7 +30,7 @@ Client &Client::operator=(const Client &other)
 		this->client_fd = other.client_fd;
 		this->nickname = other.nickname;
 		this->username = other.username;
-		this->password = othr.password;
+		this->password = other.password;
 		this->passAccepted = other.passAccepted;
 		this->registered = other.registered;
 		// copy attributes here when added
@@ -52,9 +52,9 @@ bool Client::getPassAccepted() const
 	return (this->passAccepted);
 }
 
-void Client::setPassAcceptedtrue()
+void Client::setPassAcceptedTrue()
 {
-	this->passAccepted = true
+	this->passAccepted = true;
 }
 
 bool Client::getRegistered() const
@@ -77,26 +77,36 @@ void Client::setNick(const std::string nick)
 	this->nickname = nick;
 }
 
-void Client::setUser(const std::string user);
+void Client::setUser(const std::string user)
 {
 	this->username = user;
+}
+
+void setRealname(const std::string real)
+{
+	this->realname = real;
 }
 
 bool Client::check_nick_user_filled()
 {
 	if ((!this->nickname.empty()) && (!this->username.empty()))
-		return true;
-	else
-		return false;
+	return true;
+else
+return false;
 }
 
-const std::string& Client::getNick()
+const std::string& Client::getNick() const
 {
 	return (this->nickname);
 }
-const std::string& Client::getUser()
+const std::string& Client::getUser() const
 {
+	return(this->username);
+}
 
+const std::string& getRealname() const
+{
+	return(this->realname);	
 }
 
 
