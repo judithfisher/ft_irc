@@ -76,7 +76,7 @@ class Server
     	void HandleUser(int client_fd, const std::vector<std::string> &line);
     	void HandleJoin(int client_fd, const std::vector<std::string> &line);
     	void HandlePrivMsg(int client_fd, const std::vector<std::string> &line);
-    	void HandleQuit(int client_fd, const std::vector<std::string>& tokens);
+    	void HandleQuit(int client_fd);
 		void SendMessage(int client_fd, const std::vector<std::string> &line);
 
 		void RemoveClient(int client_fd);

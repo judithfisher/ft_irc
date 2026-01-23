@@ -225,7 +225,7 @@ void Server::ReceiveData(int client_fd)
 			std::cout << "Client disconnected, client_fd: " << client_fd << std::endl;
 		
 		else
-			std::cerr << "Recv failed for client_fd: " << client_fd << " Error: " << strerror(errno) << std::endl;
+			std::cerr << "Recv failed for client_fd: " << client_fd << std::endl;
 		RemoveClient(client_fd);
 		return;
 	}
@@ -241,6 +241,94 @@ void Server::ReceiveData(int client_fd)
 	// for (size_t i = 0; i < line.size(); i++)
 	ProcessCommand(client_fd, line);		// implement command processing logic here
 }
+void Server::HandlePass(int client_fd, const std::vector<std::string> &line)
+{
+    size_t client_index = findClientbyFd(client_fd);
+    std::string pass = line[1];
+    if (pass == this->password)
+    {
+        clients[client_index].setPassAccepted();
+        std::cout << "Client fd: " << client_fd << " provided correct password." << std::endl;
+    }
+    else
+        std::cout << "Client fd: " << client_fd << " provided incorrect password." << std::endl;
+}
+void Server::HandleNick(int client_fd, const std::vector<std::string> &line)
+{
+    size_t client_index = findClientbyFd(client_fd);
+    std::string nickname = line[1];
+    if (clients[client_index].getPassAccepted() == true)
+    {
+        clients[client_index].setNickname(nickname);
+        std::cout << "Client fd: " << client_fd << " set nickname to: " << nickname << std::endl;
+        if (clients[client_index].getNickname().size() != 0 && clients[client_index].getUsername().size() != 0)
+            clients[client_index].setRegistered();
+    }
+    else
+        std::cerr << "Client fd: " << client_fd << " attempted to set nickname without passing authentication." << std::endl;
+}
+void Server::HandleUser(int client_fd, const std::vector<std::string> &line)
+{
+    size_t client_index = findClientbyFd(client_fd);
+    std::string username = line[1];
+    if (clients[client_index].getPassAccepted() == true)
+    {
+        clients[client_index].setUsername(username);
+        std::cout << "Client fd: " << client_fd << " set username to: " << username << std::endl;
+        if (clients[client_index].getNickname().size() != 0 && clients[client_index].getUsername().size() != 0)
+            clients[client_index].setRegistered();
+    }
+    else
+        std::cerr << "Client fd: " << client_fd << " attempted to set username without passing authentication." << std::endl;
+}
+void Server::HandleJoin(int client_fd, const std::vector<std::string> &line)
+{
+    size_t client_index = findClientbyFd(client_fd);
+    std::string channel_name = line[1];
+    
+	if (clients[client_index].getIsRegistered() == true)
+    {
+        clients[client_index].setIsInChannel();
+        std::cout << "Client fd: " << client_fd << " joined channel: " << channel_name << std::endl;
+    }
+    else
+        std::cerr << "Client fd: " << client_fd << " attempted to join channel without completing registration." << std::endl;
+}
+void Server::HandlePrivMsg(int client_fd, const std::vector<std::string> &line)
+{
+    size_t client_index = findClientbyFd(client_fd);
+	if (clients[client_index].getIsInChannel() == true)
+	{
+		std::string message = line[1];
+		std::cout << "Client fd: " << client_fd << " sent message: " << message << std::endl;
+		// Further message handling logic here
+	}
+	else
+		std::cerr << "Client fd: " << client_fd << " attempted to send message without being in a channel." << std::endl;
+}
+
+void Server::HandleQuit(int client_fd)
+{
+	std::cout << "Client fd: " << client_fd << " is quitting." << std::endl;
+	RemoveClient(client_fd);
+}
+
+void Server::SendMessage(int client_fd, const std::vector<std::string> &line)
+{
+	
+	 size_t client_index = findClientbyFd(client_fd);
+	 if(clients[client_index].getIsInChannel() == true)
+	 {
+		 for(size_t i = 1; i < line.size(); i++)
+		 	std::cout<< line[i] << std::endl;
+	 }
+
+	 else
+	 {
+		 std::cerr << "Client fd: " << client_fd << " attempted to send message without being in a channel." << std::endl;
+		 return;
+	 }
+}
 
 void Server::ProcessCommand(int client_fd, const std::vector<std::string> &line)
 {
@@ -253,21 +341,23 @@ void Server::ProcessCommand(int client_fd, const std::vector<std::string> &line)
 
 	if (command == "PASS")
 		HandlePass(client_fd, line);
-	else if (command == "NICK")
+	else if (command == "NICK" )
 		HandleNick(client_fd, line);
-	else if (command == "USER")
+	else if (command == "USER" )
 		HandleUser(client_fd, line);
 	else if (command == "JOIN")
 		HandleJoin(client_fd, line);
 	else if (command == "PRIVMSG")
 		HandlePrivMsg(client_fd, line);
 	else if (command == "QUIT")
-		HandleQuit(client_fd, line);
+		HandleQuit(client_fd);
 	else if (clients[client_index].getIsInChannel() == true)
 		SendMessage(client_fd, line);
 	else
 		std::cerr << "Unknown command from client_fd: " << client_fd << " Command: " << command << std::endl;
 }
+
+
 
 void Server::RemoveClient(int client_fd)
 {

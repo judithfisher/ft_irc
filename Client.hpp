@@ -27,9 +27,21 @@ class Client
 		Client &operator=(const Client &other);
 		~Client();
 
+		//setters 
+		void setNickname(const std::string &nickname);
+		void setUsername(const std::string &username);
+		void setIsInChannel();
+		void setPassAccepted();
+		void setRegistered();
+
+		
+		//getters
 		int getFd();
 		bool getIsInChannel() const;
-
+		std::string getNickname() const;
+		std::string getUsername() const;
+		bool getPassAccepted() const; 
+		bool getIsRegistered() const;
 		void AppendToBuffer(const std::string rec_buffer);
 		std::vector<std::string> ExtractCompleteCommands(std::string &input);
 		
@@ -37,6 +49,8 @@ class Client
 	private:
 		int	client_fd;
 		bool isInChannel;
+		bool passAccepted;
+		bool isRegistered;
 		std::string buffer;
 		std::string nickname;
 		std::string username;

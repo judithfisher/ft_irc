@@ -27,7 +27,7 @@ for i in $(seq 1 "$CLIENTS"); do
     read _ < "$BARRIER"
 
     FD=$$
-    echo "hall von client No. $i client_fd No. $FD"
+    echo "PASS hall von client No. $i client_fd No. $FD"
   } | nc "$HOST" "$PORT"
 ) &
 done

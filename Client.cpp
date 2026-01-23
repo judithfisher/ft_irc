@@ -49,6 +49,52 @@ bool Client::getIsInChannel() const
 	return (this->isInChannel);
 }
 
+void Client::setNickname(const std::string &nickname)
+{
+    this->nickname = nickname;
+}
+
+void Client::setUsername(const std::string &username)
+{
+    this->username = username;
+}
+
+void Client::setIsInChannel()
+{
+    this->isInChannel = true;
+}
+
+void Client::setPassAccepted()
+{
+	this->passAccepted = true;
+}
+
+void Client::setRegistered()
+{
+    this->isRegistered = true;
+}
+
+std::string Client::getUsername() const
+{
+    return (this->username);
+}
+
+std::string Client::getNickname() const
+{
+    return (this->nickname);
+}
+
+
+bool Client::getPassAccepted() const
+{
+	return (this->passAccepted);
+}
+
+bool Client::getIsRegistered() const
+{
+	return (this->isRegistered);
+}
+
 void Client::AppendToBuffer(const std::string rec_buffer)
 {
 	buffer += rec_buffer;
