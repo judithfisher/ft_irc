@@ -6,7 +6,7 @@
 /*   By: judith <judith@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 16:44:51 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/23 16:48:59 by judith           ###   ########.fr       */
+/*   Updated: 2026/01/23 17:16:19 by judith           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,7 +69,16 @@ class Server
 		void AcceptClients();
 		size_t findClientbyFd(int client_fd);
 		void ReceiveData(int client_fd);
+		
 		void ProcessCommand(int client_fd, const std::vector<std::string> &line);
+		void HandlePass(int client_fd, const std::vector<std::string> &line);
+    	void HandleNick(int client_fd, const std::vector<std::string> &line);
+    	void HandleUser(int client_fd, const std::vector<std::string> &line);
+    	void HandleJoin(int client_fd, const std::vector<std::string> &line);
+    	void HandlePrivMsg(int client_fd, const std::vector<std::string> &line);
+    	void HandleQuit(int client_fd, const std::vector<std::string>& tokens);
+		void SendMessage(int client_fd, const std::vector<std::string> &line);
+
 		void RemoveClient(int client_fd);
 		void ClearClients();
 

@@ -6,7 +6,7 @@
 /*   By: judith <judith@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 17:23:52 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/23 17:02:10 by judith           ###   ########.fr       */
+/*   Updated: 2026/01/23 17:16:38 by judith           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -239,30 +239,34 @@ void Server::ReceiveData(int client_fd)
 	
 	std::vector<std::string> line = clients[client_index].ExtractCompleteCommands(str_buffer);  // extract complete commands from client buffer
 	// for (size_t i = 0; i < line.size(); i++)
-	ProcessCommand(client_index, line);		// implement command processing logic here
+	ProcessCommand(client_fd, line);		// implement command processing logic here
 }
 
-void Server::ProcessCommand(int client_index, const std::vector<std::string> &line)
+void Server::ProcessCommand(int client_fd, const std::vector<std::string> &line)
 {
-	if (line[0] == "/JOIN")
-	{
-		Channel new_channel(line[1]); // create new channel with the name provided in line[1]
-		// some channel function here I guess
-	}
+	size_t client_index = findClientbyFd(client_fd);
+	std::string command = line[0];
 
-	else if (line[0] == "QUIT")
-	{
-		std::cout << "Client requested to quit, client_fd: " << clients[client_index].getFd() << std::endl;
-		RemoveClient(clients[client_index].getFd());
-		return;
-	}
+	for (size_t i = 0; i < command.size(); i++)
+		command[i] = toupper(command[i]);
+	
 
-	else if (clients[client_index].getIsInChannel() == false)
-	{
-		std::cout << "Command not found" << std::endl;
-		return;
-	}
-
+	if (command == "PASS")
+		HandlePass(client_fd, line);
+	else if (command == "NICK")
+		HandleNick(client_fd, line);
+	else if (command == "USER")
+		HandleUser(client_fd, line);
+	else if (command == "JOIN")
+		HandleJoin(client_fd, line);
+	else if (command == "PRIVMSG")
+		HandlePrivMsg(client_fd, line);
+	else if (command == "QUIT")
+		HandleQuit(client_fd, line);
+	else if (clients[client_index].getIsInChannel() == true)
+		SendMessage(client_fd, line);
+	else
+		std::cerr << "Unknown command from client_fd: " << client_fd << " Command: " << command << std::endl;
 }
 
 void Server::RemoveClient(int client_fd)
