@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
+/*   By: judith <judith@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 17:25:24 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/18 14:49:48 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/23 16:57:22 by judith           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,11 @@ int Client::getFd()
 	return (this->client_fd);
 }
 
+bool Client::getIsInChannel() const
+{
+	return (this->isInChannel);
+}
+
 void Client::AppendToBuffer(const std::string rec_buffer)
 {
 	buffer += rec_buffer;
@@ -51,29 +56,31 @@ void Client::AppendToBuffer(const std::string rec_buffer)
 		throw std::runtime_error("No spamming allowed, you fool! Exceeded maximum buffer size.");
 }
 
+std::vector<std::string> split(const std::string &input)
+{
+    std::vector<std::string> tokens;
+    std::istringstream istreami(input);
+    std::string t;
+
+    while (istreami >> t)
+        tokens.push_back(t);
+
+    return (tokens);
+}
+
 // "USER test\r\nJOIN #chan\r\nPRIVMSG #chan :Hi\r\n"
 // netcat only sends \n not \r\n, so we need to handle that case too
-std::vector<std::string> Client::ExtractCompleteCommands()
+std::vector<std::string> Client::ExtractCompleteCommands(std::string &input)
 {
+	std::string token;
 	std::vector<std::string> commands;
-	commands[0] = '\JOIN';
-	commands[1] = '\PASS';
+	std::istringstream istreami(input);
 
 
-	while (true)
-	{
-		size_t pos = buffer.find('\n');
-		
-		if (pos == std::string::npos)
-			break;
-	
-		std::string line = buffer.substr(0, pos); 				// Extract command up to \n
-		if (!line.empty() && line[line.length() - 1] == '\r')
-			line.erase(line.length() - 1);						// Remove trailing \r if present
+    while (istreami >> token)
+        commands.push_back(token);
 
-		if (!line.empty())
-			commands.push_back(line); 							// Store the complete command
-		buffer.erase(0, pos + 1); 								// Remove extracted command from buffer including \n
-	}
-	return (commands);
+    return (commands);
+
+
 }

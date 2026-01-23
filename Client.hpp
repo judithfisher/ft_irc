@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
+/*   By: judith <judith@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 16:45:13 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/17 19:34:24 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/23 16:57:16 by judith           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,14 +28,15 @@ class Client
 		~Client();
 
 		int getFd();
+		bool getIsInChannel() const;
 
 		void AppendToBuffer(const std::string rec_buffer);
-		std::vector<std::string> ExtractCompleteCommands();
+		std::vector<std::string> ExtractCompleteCommands(std::string &input);
 		
 
 	private:
-		int				client_fd;
-
+		int	client_fd;
+		bool isInChannel;
 		std::string buffer;
 		std::string nickname;
 		std::string username;

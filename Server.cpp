@@ -6,14 +6,12 @@
 /*   By: judith <judith@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 17:23:52 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/23 14:20:02 by judith           ###   ########.fr       */
+/*   Updated: 2026/01/23 17:02:10 by judith           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <cstring>
-#include <iostream>
 #include "Server.hpp"
-#include <cerrno> 
+#include "Channel.hpp"
 
 Server::Server()
 {
@@ -239,44 +237,32 @@ void Server::ReceiveData(int client_fd)
 	std::string str_buffer(buffer, bytes_received);			// std::string(buffer, bytes_received) Constructor for string
 	clients[client_index].AppendToBuffer(str_buffer);
 	
-	std::vector<std::string> line = clients[client_index].ExtractCompleteCommands();  // extract complete commands from client buffer
-	for (size_t i = 0; i < line.size(); i++)
-		ProcessCommand(client_fd, line[i]);		// implement command processing logic here
+	std::vector<std::string> line = clients[client_index].ExtractCompleteCommands(str_buffer);  // extract complete commands from client buffer
+	// for (size_t i = 0; i < line.size(); i++)
+	ProcessCommand(client_index, line);		// implement command processing logic here
 }
 
-std::vector<std::string> split(const std::string& line)
+void Server::ProcessCommand(int client_index, const std::vector<std::string> &line)
 {
-    std::vector<std::string> tokens;
-    std::istringstream istreami(line);
-    std::string t;
-
-    while (istreami >> t)
-        tokens.push_back(t);
-
-    return (tokens);
-}
-
-void Server::ProcessCommand(int client_fd, const std::string &line)
-{
-	std::vector<std::string> tokens = split(line);
-	
-	if (tokens.empty())
-		return;
-	std::cout << line << std::endl;
-		
-	const std::string command = tokens[0];
-
-	if (command == "QUIT")
+	if (line[0] == "/JOIN")
 	{
-		std::cout << "Client requested to quit, client_fd: " << client_fd << std::endl;
-		RemoveClient(client_fd);
+		Channel new_channel(line[1]); // create new channel with the name provided in line[1]
+		// some channel function here I guess
+	}
+
+	else if (line[0] == "QUIT")
+	{
+		std::cout << "Client requested to quit, client_fd: " << clients[client_index].getFd() << std::endl;
+		RemoveClient(clients[client_index].getFd());
 		return;
 	}
-	// std::cout << "Received command from client_fd " << client_fd << ": " << command << std::endl; 	// just for testing
-	
-		// if PRIVMSG send message to target
-		// if JOIN add client to channel
-		// etc...
+
+	else if (clients[client_index].getIsInChannel() == false)
+	{
+		std::cout << "Command not found" << std::endl;
+		return;
+	}
+
 }
 
 void Server::RemoveClient(int client_fd)
