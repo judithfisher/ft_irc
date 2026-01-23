@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
+/*   By: judith <judith@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 16:44:51 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/17 20:56:08 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/23 14:18:34 by judith           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,6 +67,7 @@ class Server
 		void InitServerSocket();
 		void RunServer();
 		void AcceptClients();
+		size_t findClientbyFd(int client_fd);
 		void ReceiveData(int client_fd);
 		void ProcessCommand(int client_fd, const std::string &command);
 		void RemoveClient(int client_fd);

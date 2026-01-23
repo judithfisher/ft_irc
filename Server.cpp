@@ -6,7 +6,7 @@
 /*   By: judith <judith@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 17:23:52 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/23 11:52:14 by judith           ###   ########.fr       */
+/*   Updated: 2026/01/23 14:20:02 by judith           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -181,6 +181,18 @@ void Server::AcceptClients()
 	}
 }
 
+size_t Server::findClientbyFd(int client_fd)
+{
+	for (size_t i = 0; i < clients.size(); i++)
+	{
+		if (clients[i].getFd() == client_fd)
+			return (i);
+	}
+	std::cerr << "Client not found, client_fd: " << client_fd << std::endl;
+	return (-1);
+}
+
+
 /*
 ─────────────────────────────────────────────────┐
 │              CLIENT BUFFER (string)            │
@@ -223,8 +235,9 @@ void Server::ReceiveData(int client_fd)
 	buffer[bytes_received] = '\0'; // Null-terminate the received data
 	std::cout << "Receiving data from client_fd: " << client_fd << std::endl;
 
+	size_t client_index = findClientbyFd(client_fd);
 	std::string str_buffer(buffer, bytes_received);			// std::string(buffer, bytes_received) Constructor for string
-	clients[client_fd].AppendToBuffer(str_buffer);
+	clients[client_index].AppendToBuffer(str_buffer);
 	
 	std::vector<std::string> commands = clients[client_fd].ExtractCompleteCommands();
 	for (size_t i = 0; i < commands.size(); i++)
