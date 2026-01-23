@@ -239,9 +239,9 @@ void Server::ReceiveData(int client_fd)
 	std::string str_buffer(buffer, bytes_received);			// std::string(buffer, bytes_received) Constructor for string
 	clients[client_index].AppendToBuffer(str_buffer);
 	
-	std::vector<std::string> commands = clients[client_fd].ExtractCompleteCommands();
-	for (size_t i = 0; i < commands.size(); i++)
-		ProcessCommand(client_fd, commands[i]);		// implement command processing logic here
+	std::vector<std::string> line = clients[client_index].ExtractCompleteCommands();  // extract complete commands from client buffer
+	for (size_t i = 0; i < line.size(); i++)
+		ProcessCommand(client_fd, line[i]);		// implement command processing logic here
 }
 
 std::vector<std::string> split(const std::string& line)
@@ -262,8 +262,9 @@ void Server::ProcessCommand(int client_fd, const std::string &line)
 	
 	if (tokens.empty())
 		return;
+	std::cout << line << std::endl;
 		
-	const std::string &command = tokens[0];
+	const std::string command = tokens[0];
 
 	if (command == "QUIT")
 	{
@@ -271,7 +272,7 @@ void Server::ProcessCommand(int client_fd, const std::string &line)
 		RemoveClient(client_fd);
 		return;
 	}
-	std::cout << "Received command from client_fd " << client_fd << ": " << command << std::endl; 	// just for testing
+	// std::cout << "Received command from client_fd " << client_fd << ": " << command << std::endl; 	// just for testing
 	
 		// if PRIVMSG send message to target
 		// if JOIN add client to channel

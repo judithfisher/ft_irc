@@ -29,7 +29,7 @@ class Client
 
 		int getFd();
 
-		void AppendToBuffer(const std::string &rec_buffer);
+		void AppendToBuffer(const std::string rec_buffer);
 		std::vector<std::string> ExtractCompleteCommands();
 		
 

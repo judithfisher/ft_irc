@@ -12,8 +12,9 @@
 
 NAME = ft_irc
 
-C++ = c++
-FLAGS = -g -Wall -Wextra -Werror -std=c++98 
+CXX = c++
+FLAGS = -g -O0 -Wall -Wextra -Werror -std=c++98 -no-pie
+
 
 SRCS = 	Client.cpp \
 		checkers.cpp \
@@ -25,10 +26,10 @@ OBJS = $(SRCS:.cpp=.o)
 all: $(NAME)
 
 $(NAME): $(OBJS)
-	$(C++) $(FLAGS) $(OBJS) -o $(NAME)
+	$(CXX) $(FLAGS) $(OBJS) -o $(NAME)
 
 %.o: %.cpp
-	$(C++) $(FLAGS) -c $< -o $@
+	$(CXX) $(FLAGS) -c $< -o $@
 clean:
 	rm -f $(OBJS)
 

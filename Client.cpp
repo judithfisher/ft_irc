@@ -44,7 +44,7 @@ int Client::getFd()
 	return (this->client_fd);
 }
 
-void Client::AppendToBuffer(const std::string &rec_buffer)
+void Client::AppendToBuffer(const std::string rec_buffer)
 {
 	buffer += rec_buffer;
 	if (buffer.size() > MAX_BUFFER_SIZE)
@@ -56,6 +56,9 @@ void Client::AppendToBuffer(const std::string &rec_buffer)
 std::vector<std::string> Client::ExtractCompleteCommands()
 {
 	std::vector<std::string> commands;
+	commands[0] = '\JOIN';
+	commands[1] = '\PASS';
+
 
 	while (true)
 	{

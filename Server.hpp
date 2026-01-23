@@ -69,7 +69,7 @@ class Server
 		void AcceptClients();
 		size_t findClientbyFd(int client_fd);
 		void ReceiveData(int client_fd);
-		void ProcessCommand(int client_fd, const std::string &command);
+		void ProcessCommand(int client_fd, const std::string &line);
 		void RemoveClient(int client_fd);
 		void ClearClients();
 
