@@ -6,7 +6,7 @@
 /*   By: judith <judith@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 17:23:52 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/23 17:16:38 by judith           ###   ########.fr       */
+/*   Updated: 2026/01/24 16:53:43 by judith           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -123,22 +123,26 @@ void Server::InitServerSocket()
 
 	std::cout << "Server listening on fd: " << this->server_fd << std::endl;
 }
-void Server::sendLine(int fd, const std::string &msg)
+// // original void Server::sendLine(int fd, const std::string &msg)
+// {
+//     std::string out = msg + "\r\n";
+//     const char *buf = out.c_str();
+//     size_t len = out.size();
+//     size_t sentTotal = 0;
+
+//     while (sentTotal < len)
+//     {
+//         ssize_t n = ::send(fd, buf + sentTotal, len - sentTotal, 0);
+//         if (n <= 0)
+//             return; // optional: handle EAGAIN/EWOULDBLOCK/EINTR
+//         sentTotal += static_cast<size_t>(n);
+//     }
+// }
+void Server::sendLine(int fd, const std::string& msg)
 {
     std::string out = msg + "\r\n";
-    const char *buf = out.c_str();
-    size_t len = out.size();
-    size_t sentTotal = 0;
-
-    while (sentTotal < len)
-    {
-        ssize_t n = ::send(fd, buf + sentTotal, len - sentTotal, 0);
-        if (n <= 0)
-            return; // optional: handle EAGAIN/EWOULDBLOCK/EINTR
-        sentTotal += static_cast<size_t>(n);
-    }
+    send(fd, out.c_str(), out.size(), 0);
 }
-
 void Server::Greeting(int client_fd)
 {
     sendLine(client_fd, "375 :- IRC SERVER 42 Message of the Day -");
@@ -192,7 +196,7 @@ void Server::RunServer()
 				}
 				else
 				{
-					Greeting(fds[i].fd);								// client socket
+					//Greeting(fds[i].fd);								// client socket
 					ReceiveData(fds[i].fd);
 				}
 					
@@ -288,11 +292,11 @@ void Server::ReceiveData(int client_fd)
 	size_t client_index = findClientbyFd(client_fd);
 	std::string str_buffer(buffer, bytes_received);			// std::string(buffer, bytes_received) Constructor for string
 	clients[client_index].AppendToBuffer(str_buffer);
-	
-	std::vector<std::string> line = clients[client_index].ExtractCompleteCommands(str_buffer);  // extract complete commands from client buffer
-	if(line.empty())
-		return;
-	ProcessCommand(client_fd, line);		// implement command processing logic here
+
+	std::vector<std::string> cmds =	clients[client_index].ExtractCompleteCommands();
+
+for (size_t i = 0; i < cmds.size(); ++i)
+	ProcessCommand(client_fd, cmds[i]);
 }
 
 void Server::HandlePass(int client_fd, const std::vector<std::string> &line)
@@ -363,39 +367,90 @@ void Server::HandleUser(int client_fd, const std::vector<std::string> &line)
         std::cerr << "Client fd: " << client_fd << " attempted to join channel without completing registration." << std::endl;
 }*/
 
-void Server::HandleJoin(int client_fd, const std::vector<std::string> &line)			// corrected version
+void Server::HandleJoin(int client_fd, const std::vector<std::string>& line)
 {
-    size_t client_index = findClientbyFd(client_fd);									// find client index by fd
-    std::string channel_name = line[1];													// get channel name from command arguments
-																						// check if client is registered		
-    if (!clients[client_index].getIsRegistered())										
+    int client_index = findClientbyFd(client_fd);
+    if (client_index == -1)
+        return;
+    
+    if (!clients[client_index].getIsRegistered())
     {
-        std::cerr << "Client fd: " << client_fd							
-                  << " attempted to join channel without completing registration."
-                  << std::endl;
+        sendLine(client_fd, "451 :You have not registered");
         return;
     }
-
-    // create Channel if it doesn't exist
+    
+    if (line.size() < 2)
+    {
+        sendLine(client_fd, "461 JOIN :Not enough parameters");
+        return;
+    }
+    
+    std::string channel_name = line[1];
+    
+    if (channel_name.empty() || channel_name[0] != '#')
+    {
+        sendLine(client_fd, "403 " + channel_name + " :No such channel");
+        return;
+    }
+    
+    // Create channel if doesn't exist
     if (!channelExists(channel_name))
         createChannel(channel_name);
-
-    // get pointer to Channel object
+    
     Channel* ch = getChannel(channel_name);
     if (!ch)
         return;
-
-    // 	add client to channel
+    
+    // Check if already in channel
+    if (ch->isUserInChannel(client_fd))
+    {
+        std::cout << "Already in channel" << std::endl;
+        return;
+    }
+    
+    // Add user to channel
     ch->addUser(&clients[client_index]);
-
-    // mark client as being in a channel	
+    
+    // First user becomes operator
+    if (ch->getUserCount() == 1)
+        ch->addOperator(client_fd);
+    
     clients[client_index].setIsInChannel();
-
-    std::cout << "Client fd: " << client_fd
-              << " joined channel: " << channel_name << std::endl;
-	sendLine(client_fd, ":" + clients[client_index].getNickname() + "!user@host JOIN " + channel_name);
-
+    
+    std::string nick = clients[client_index].getNickname();
+    std::string user = clients[client_index].getUsername();
+    if (user.empty()) user = "user";
+    
+    // ✅ 1. Broadcast JOIN to ALL members (only once!)
+    std::string joinMsg = ":" + nick + "!" + user + "@host JOIN " + channel_name;
+    const std::map<std::string, Client*>& members = ch->getClients();
+    for (std::map<std::string, Client*>::const_iterator it = members.begin();
+         it != members.end(); ++it)
+    {
+        sendLine(it->second->getFd(), joinMsg);
+    }
+    // ✅ 2. Topic (only to joining user)
+    sendLine(client_fd, "331 " + nick + " " + channel_name + " :No topic is set");
+    
+    // ✅ 3. Names list (only to joining user)
+    std::string names = "353 " + nick + " = " + channel_name + " :";
+    for (std::map<std::string, Client*>::const_iterator it = members.begin();
+         it != members.end(); ++it)
+    {
+        if (ch->isOperator(it->second->getFd()))
+            names += "@";
+        names += it->first;
+        names += " ";
+    }
+    sendLine(client_fd, names);
+    
+    // ✅ 4. End of names (only to joining user)
+    sendLine(client_fd, "366 " + nick + " " + channel_name + " :End of /NAMES list");
+    
+    std::cout << "Client " << nick << " joined " << channel_name << std::endl;
 }
+   // line example: ["JOIN", "#chan"] or ["JOIN", "#chan,#chan2"]
+ 
 
 void Server::HandlePrivMsg(int client_fd, const std::vector<std::string> &line)
 {
@@ -478,31 +533,101 @@ void Server::SendMessage(int client_fd, const std::vector<std::string> &line)
 	 }
 }
 
-void Server::ProcessCommand(int client_fd, const std::vector<std::string> &line)
+std::vector<std::string> ParseCommand(const std::string& line)
 {
-	size_t client_index = findClientbyFd(client_fd);
-	std::string command = line[0];
-	
-	for (size_t i = 0; i < command.size(); i++)
-		command[i] = toupper(command[i]);
-	
+    std::vector<std::string> tokens;
+    std::string current;
+    bool in_trailing = false;
+    
+    for (size_t i = 0; i < line.length(); i++)
+    {
+        char c = line[i];
+        
+        // Trailing parameter (starts with :)
+        if (c == ':' && !in_trailing && (i == 0 || line[i-1] == ' '))
+        {
+            if (!current.empty())
+            {
+                tokens.push_back(current);
+                current.clear();
+            }
+            in_trailing = true;
+            continue;
+        }
+        
+        if (c == ' ' && !in_trailing)
+        {
+            if (!current.empty())
+            {
+                tokens.push_back(current);
+                current.clear();
+            }
+        }
+        else
+        {
+            current += c;
+        }
+    }
+    
+    if (!current.empty())
+        tokens.push_back(current);
+    
+    return tokens;
+}
 
-	if (command == "PASS")
-		HandlePass(client_fd, line);
-	else if (command == "NICK" )
-		HandleNick(client_fd, line);
-	else if (command == "USER" )
-		HandleUser(client_fd, line);
-	else if (command == "JOIN")
-		HandleJoin(client_fd, line);
-	else if (command == "PRIVMSG")
-		HandlePrivMsg(client_fd, line);
-	else if (command == "QUIT")
-		HandleQuit(client_fd);		//later implement HandleQuit(client_fd);
-	else if (clients[client_index].getIsInChannel() == true)
-		SendMessage(client_fd, line);
-	else
-		std::cerr << "Unknown command from client_fd: " << client_fd << " Command: " << command << std::endl;
+void Server::ProcessCommand(int client_fd, const std::string& line)
+{
+    if (line.empty())
+        return;
+    
+    // ✅ HIER parsed du den String in Tokens
+    std::vector<std::string> tokens = ParseCommand(line);
+    
+    if (tokens.empty())
+        return;
+    
+    int client_index = findClientbyFd(client_fd);
+    if (client_index == -1)
+        return;
+    
+    std::string command = tokens[0];
+    
+    // Convert to uppercase
+    for (size_t i = 0; i < command.size(); i++)
+        command[i] = std::toupper(command[i]);
+    
+    std::cout << "[" << client_fd << "] " << command << std::endl;
+    
+    // Route commands
+    if (command == "CAP")
+    {
+        sendLine(client_fd, "CAP * LS :");
+    }
+    else if (command == "PING")
+    {
+        if (tokens.size() > 1)
+            sendLine(client_fd, "PONG ircserv :" + tokens[1]);
+        else
+            sendLine(client_fd, "PONG ircserv");
+    }
+    else if (command == "PASS")
+        HandlePass(client_fd, tokens);
+    else if (command == "NICK")
+        HandleNick(client_fd, tokens);
+    else if (command == "USER")
+        HandleUser(client_fd, tokens);
+    else if (command == "JOIN")
+        HandleJoin(client_fd, tokens);
+    else if (command == "PRIVMSG")
+        HandlePrivMsg(client_fd, tokens);
+    else if (command == "QUIT")
+        HandleQuit(client_fd);
+    else if (clients[client_index].getIsInChannel())
+        SendMessage(client_fd, tokens);
+    else
+    {
+        std::cout << "Unknown command: " << command << std::endl;
+    }
 }
 
 void Server::RemoveClient(int client_fd)    // We have to QUIT twice to quit once !!!! ERROR !!!! 

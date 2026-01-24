@@ -43,7 +43,7 @@ class Client
 		bool getPassAccepted() const; 
 		bool getIsRegistered() const;
 		void AppendToBuffer(const std::string rec_buffer);
-		std::vector<std::string> ExtractCompleteCommands(std::string &input);
+		std::vector<std::string> ExtractCompleteCommands();
 		
 
 	private:

@@ -6,7 +6,7 @@
 /*   By: judith <judith@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 17:25:24 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/23 16:57:22 by judith           ###   ########.fr       */
+/*   Updated: 2026/01/24 16:23:15 by judith           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -116,17 +116,47 @@ std::vector<std::string> split(const std::string &input)
 
 // "USER test\r\nJOIN #chan\r\nPRIVMSG #chan :Hi\r\n"
 // netcat only sends \n not \r\n, so we need to handle that case too
-std::vector<std::string> Client::ExtractCompleteCommands(std::string &input)
+// std::vector<std::string> Client::ExtractCompleteCommands(std::string &input)
+// {
+// 	std::string token;
+// 	std::vector<std::string> commands;
+// 	std::istringstream istreami(input);
+
+
+//     while (istreami >> token)
+//         commands.push_back(token);
+
+//     return (commands);
+
+
+// }
+
+std::vector<std::string> Client::ExtractCompleteCommands()
 {
-	std::string token;
-	std::vector<std::string> commands;
-	std::istringstream istreami(input);
-
-
-    while (istreami >> token)
-        commands.push_back(token);
-
-    return (commands);
-
-
+    std::vector<std::string> commands;  // ✅ Vector of LINES (not tokens!)
+    
+    while (true)
+    {
+        // Find newline (\r\n or \n)
+        size_t pos = buffer.find('\n');
+        
+        if (pos == std::string::npos)
+            break;
+        
+        // Extract line before \n
+        std::string line = buffer.substr(0, pos);
+        
+        // Remove trailing \r if present
+        if (!line.empty() && line[line.length() - 1] == '\r')
+            line.erase(line.length() - 1);
+        
+        // Add non-empty lines
+        if (!line.empty())
+            commands.push_back(line);  // ✅ Push the WHOLE LINE
+        
+        // Remove from buffer
+        buffer.erase(0, pos + 1);
+    }
+    
+    return commands;  // ✅ Returns ["NICK alice", "USER alice 0 * :Alice", ...]
 }

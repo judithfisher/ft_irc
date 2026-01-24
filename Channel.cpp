@@ -1,10 +1,11 @@
 #include "Channel.hpp"
 #include "Client.hpp"
+#include "Server.hpp"
 
 Channel::Channel(const std::string& name)
     : name(name), topic(""), password(""), inviteOnly(false), topicRestricted(false), userLimit(0)
 {
-    std::cout << "Channel " << name << " created." << std::endl;
+    std::cout << " Constructor says: "<< "Channel " << name << " created." << std::endl;
 }
 
 Channel::Channel(const Channel& other)
@@ -28,22 +29,25 @@ Channel& Channel::operator=(const Channel& other)
 
 Channel::~Channel()
 {
-    std::cout << "Channel " << name << " destroyed." << std::endl;
+    std::cout << "Destructor says "<< "Channel " << name << " destroyed." << std::endl;
 }
 
 
 void Channel::addUser(Client *client)
 {
+    int client_fd = client->getFd();
     std::string client_nick = client->getNickname();
+    
+    // Add to map
     channel_clients.insert(std::make_pair(client_nick, client));
-
-
-    // for (size_t i = 0; i < users.size(); i++)
-    // {
-    //     if (users[i] == client_fd)
-    //         return ;                     // User already in channel
-    // }
-    // users.push_back(client_fd);
+    
+    // ✅ ADD TO USERS VECTOR!
+    for (size_t i = 0; i < users.size(); i++)
+    {
+        if (users[i] == client_fd)
+            return;  // Already in channel
+    }
+    users.push_back(client_fd);
 }
 
 void Channel::removeUser(int client_fd)
@@ -111,6 +115,24 @@ bool Channel::isOperator(int client_fd) const
             return true;
     }
     return false;
+}
+// broadcast to all clients   
+void Channel::broadcast(const std::string& msg)
+{
+    for (std::map<std::string, Client*>::iterator it = channel_clients.begin();
+         it != channel_clients.end(); ++it)
+    {
+        Server::sendLine(it->second->getFd(), msg);
+    }
+}
+const std::map<std::string, Client*>& Channel::getClients() const
+{
+    return channel_clients;
+}
+
+size_t Channel::getUserCount() const
+{
+    return users.size();
 }
 
 

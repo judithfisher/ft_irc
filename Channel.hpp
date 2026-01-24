@@ -29,6 +29,8 @@ class Channel
         bool isUserInvited(int client_fd) const;
 
         std::string getName() const;
+        const std::vector<int>&getUsers() const;
+        size_t getUserCount() const;
         std::string getTopic() const;
 
         void setTopic(const std::string& newTopic);
@@ -36,6 +38,8 @@ class Channel
         void setInviteOnly(bool inviteOnly);
         void setTopicRestricted(bool topicRestricted);
         void setUserLimit(int limit);
+        void broadcast(const std::string& msg);
+        const std::map<std::string, Client*>& getClients() const;
 
     private:
         std::map<std::string, Client*> channel_clients; 
