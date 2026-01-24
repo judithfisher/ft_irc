@@ -28,8 +28,10 @@
 # include <sstream> 				//for istringstream
 # include <cctype>					//for isdigit() isascii()
 # include <cstring>					//for strlen()
-
-# include "Client.hpp"
+# include <map>						//for map  , channels will be organiyzed in map with channel name as key and Channel object as value
+// my includes
+# include "Channel.hpp"				//for Channel class
+# include "Client.hpp"				//for Client class
 
 #define R "\033[0m"
 #define RED "\033[38;2;239;68;68m"
@@ -49,7 +51,7 @@ class Server
 		std::string	password;
 		std::vector<Client>	clients; 		// to keep track of connected clients + to manage their requests
 		std::vector<struct pollfd> fds;		// vector of pollfd, to monitor multiple file descriptors
-		
+		std::map<std::string, Channel> channels; // map of channel name to Channel object
 	public:	
 		Server();
 		Server(const Server &other);
@@ -65,8 +67,10 @@ class Server
 		static void SignalHandler(int signum);
 
 		void InitServerSocket();
+		void sendLine(int fd, const std::string &msg);
 		void RunServer();
 		void AcceptClients();
+		void Greeting(int client_fd);
 		size_t findClientbyFd(int client_fd);
 		void ReceiveData(int client_fd);
 		
@@ -81,6 +85,13 @@ class Server
 
 		void RemoveClient(int client_fd);
 		void ClearClients();
+
+		// Channel management
+		bool channelExists(const std::string& name) const; // check if channel exists
+		Channel* getChannel(const std::string& name);		// get pointer to channel by name
+    	void createChannel(const std::string& name);		// create a new channel
+    	void removeChannel(const std::string& name);		// remove channel by name
+		// End of channel management
 
 		static bool	SignalReceived;			// part of class server, not individual objects --> static
 
@@ -112,6 +123,7 @@ class Server
 		{
 			const char *what() const throw();
 		};
+		
 	
 };
 

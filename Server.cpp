@@ -11,7 +11,7 @@
 /* ************************************************************************** */
 
 #include "Server.hpp"
-#include "Channel.hpp"
+
 
 Server::Server()
 {
@@ -123,14 +123,52 @@ void Server::InitServerSocket()
 
 	std::cout << "Server listening on fd: " << this->server_fd << std::endl;
 }
+void Server::sendLine(int fd, const std::string &msg)
+{
+    std::string out = msg + "\r\n";
+    const char *buf = out.c_str();
+    size_t len = out.size();
+    size_t sentTotal = 0;
 
+    while (sentTotal < len)
+    {
+        ssize_t n = ::send(fd, buf + sentTotal, len - sentTotal, 0);
+        if (n <= 0)
+            return; // optional: handle EAGAIN/EWOULDBLOCK/EINTR
+        sentTotal += static_cast<size_t>(n);
+    }
+}
+
+void Server::Greeting(int client_fd)
+{
+    sendLine(client_fd, "375 :- IRC SERVER 42 Message of the Day -");
+
+    sendLine(client_fd, " \033[1;35m░██████░█████████    ░██████       ░██████   ░██████████ ░█████████  ░██    ░██ ░██████████ ░█████████        ░████    ░██████");
+    sendLine(client_fd, "   ░██  ░██     ░██  ░██   ░██     ░██   ░██  ░██         ░██     ░██ ░██    ░██ ░██         ░██     ░██      ░██ ██   ░██   ░██");
+    sendLine(client_fd, "   ░██  ░██     ░██ ░██           ░██         ░██         ░██     ░██ ░██    ░██ ░██         ░██     ░██     ░██  ██         ░██");
+    sendLine(client_fd, "   ░██  ░█████████  ░██            ░████████  ░█████████  ░█████████  ░██    ░██ ░█████████  ░█████████     ░██   ██     ░█████");
+    sendLine(client_fd, "   ░██  ░██   ░██   ░██                   ░██ ░██         ░██   ░██    ░██  ░██  ░██         ░██   ░██      ░█████████  ░██");
+    sendLine(client_fd, "   ░██  ░██    ░██   ░██   ░██     ░██   ░██  ░██         ░██    ░██    ░██░██   ░██         ░██    ░██          ░██   ░██");
+    sendLine(client_fd, " ░██████░██     ░██   ░██████       ░██████   ░██████████ ░██     ░██    ░███    ░██████████ ░██     ░██         ░██   ░████████\033[0m");
+
+    sendLine(client_fd, " ");
+	sendLine(client_fd, "\033[1;35mNOTICE * :Welcome to IRC SERVER 42");
+    sendLine(client_fd, "\033[1;35mNOTICE * :Authentication required.");
+    sendLine(client_fd, "\033[1;35mNOTICE * :");
+    sendLine(client_fd, "\033[1;35mNOTICE * :Please authenticate first:");
+    sendLine(client_fd, "\033[1;35mNOTICE * :PASS <password>");
+    sendLine(client_fd, "\033[1;35mNOTICE * :");
+    sendLine(client_fd, "\033[1;35mNOTICE * :Then continue with:");
+    sendLine(client_fd, "\033[1;35mNOTICE * :NICK <nickname>");
+    sendLine(client_fd, "\033[1;35mNOTICE * :USER <username> 0 * :realname");
+}
 // poll puts your process to sleep and wakes it when at least 1 fd becomes usable for the kind of I/O signal you care about (fds.events[i]) or when time runs out
 // poll return value = total number of fds that have been selected (fds for which the revents member is non-zero), 0 indicates time-out (no fds selected), -1 some error or CRTL+C
 void Server::RunServer()
 {
 	while (SignalReceived == false)
 	{
-		int poll_count = poll(fds.data(), fds.size(), -1); // -1 = no time-out
+ 		int poll_count = poll(fds.data(), fds.size(), -1); // -1 = no time-out
 		if (poll_count == -1)
 		{
 			std::cerr << "Poll failed " << std::endl;
@@ -142,9 +180,22 @@ void Server::RunServer()
 			if (fds[i].revents & POLLIN)
 			{
 				if (fds[i].fd == this->server_fd)	// is it server socket? new client connecting
+				{	
 					AcceptClients();
-				else								// client socket
+					i++; // after AcceptClients(), fds vector might have changed, so we increment i to avoid skipping the next fd
+					// for (; i < fds.size(); i++)
+					// {
+					// 	//Greeting(fds[i].fd);
+					// }
+					
+					
+				}
+				else
+				{
+					Greeting(fds[i].fd);								// client socket
 					ReceiveData(fds[i].fd);
+				}
+					
 			}
 
 			if (fds[i].revents & (POLLERR | POLLHUP | POLLNVAL))	// POLLHUP = hang up (client disconnected), POLLNVAL = invalid fd, POLLERR = error on the existing fd
@@ -215,6 +266,7 @@ size_t Server::findClientbyFd(int client_fd)
 
 void Server::ReceiveData(int client_fd)
 {
+
 	char buffer[MAX_BUFFER_SIZE + 1]; // +1 for null-terminator
 	// buffer[0] = '\0';
 	int bytes_received = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
@@ -238,13 +290,20 @@ void Server::ReceiveData(int client_fd)
 	clients[client_index].AppendToBuffer(str_buffer);
 	
 	std::vector<std::string> line = clients[client_index].ExtractCompleteCommands(str_buffer);  // extract complete commands from client buffer
-	// for (size_t i = 0; i < line.size(); i++)
+	if(line.empty())
+		return;
 	ProcessCommand(client_fd, line);		// implement command processing logic here
 }
+
 void Server::HandlePass(int client_fd, const std::vector<std::string> &line)
 {
     size_t client_index = findClientbyFd(client_fd);
     std::string pass = line[1];
+    if (pass.empty())
+    {
+        std::cerr << "Client fd: " << client_fd << " provided empty password." << std::endl;
+        return;
+    }
     if (pass == this->password)
     {
         clients[client_index].setPassAccepted();
@@ -253,12 +312,21 @@ void Server::HandlePass(int client_fd, const std::vector<std::string> &line)
     else
         std::cout << "Client fd: " << client_fd << " provided incorrect password." << std::endl;
 }
+
 void Server::HandleNick(int client_fd, const std::vector<std::string> &line)
 {
     size_t client_index = findClientbyFd(client_fd);
     std::string nickname = line[1];
     if (clients[client_index].getPassAccepted() == true)
     {
+		for (size_t i = 0; i < clients.size(); i++)
+        {
+            if (clients[i].getNickname() == nickname)
+            {
+                std::cerr << "Client fd: " << client_fd << " attempted to set duplicate nickname: " << nickname << std::endl;
+                return;
+            }
+        }
         clients[client_index].setNickname(nickname);
         std::cout << "Client fd: " << client_fd << " set nickname to: " << nickname << std::endl;
         if (clients[client_index].getNickname().size() != 0 && clients[client_index].getUsername().size() != 0)
@@ -281,7 +349,7 @@ void Server::HandleUser(int client_fd, const std::vector<std::string> &line)
     else
         std::cerr << "Client fd: " << client_fd << " attempted to set username without passing authentication." << std::endl;
 }
-void Server::HandleJoin(int client_fd, const std::vector<std::string> &line)
+/*void Server::HandleJoin(int client_fd, const std::vector<std::string> &line)
 {
     size_t client_index = findClientbyFd(client_fd);
     std::string channel_name = line[1];
@@ -293,7 +361,42 @@ void Server::HandleJoin(int client_fd, const std::vector<std::string> &line)
     }
     else
         std::cerr << "Client fd: " << client_fd << " attempted to join channel without completing registration." << std::endl;
+}*/
+
+void Server::HandleJoin(int client_fd, const std::vector<std::string> &line)			// corrected version
+{
+    size_t client_index = findClientbyFd(client_fd);									// find client index by fd
+    std::string channel_name = line[1];													// get channel name from command arguments
+																						// check if client is registered		
+    if (!clients[client_index].getIsRegistered())										
+    {
+        std::cerr << "Client fd: " << client_fd							
+                  << " attempted to join channel without completing registration."
+                  << std::endl;
+        return;
+    }
+
+    // create Channel if it doesn't exist
+    if (!channelExists(channel_name))
+        createChannel(channel_name);
+
+    // get pointer to Channel object
+    Channel* ch = getChannel(channel_name);
+    if (!ch)
+        return;
+
+    // 	add client to channel
+    ch->addUser(&clients[client_index]);
+
+    // mark client as being in a channel	
+    clients[client_index].setIsInChannel();
+
+    std::cout << "Client fd: " << client_fd
+              << " joined channel: " << channel_name << std::endl;
+	sendLine(client_fd, ":" + clients[client_index].getNickname() + "!user@host JOIN " + channel_name);
+
 }
+
 void Server::HandlePrivMsg(int client_fd, const std::vector<std::string> &line)
 {
     size_t client_index = findClientbyFd(client_fd);
@@ -310,8 +413,53 @@ void Server::HandlePrivMsg(int client_fd, const std::vector<std::string> &line)
 void Server::HandleQuit(int client_fd)
 {
 	std::cout << "Client fd: " << client_fd << " is quitting." << std::endl;
+	sendLine(client_fd, "\033[2J\033[H");  //Clear screen command");
 	RemoveClient(client_fd);
 }
+
+// Channel management functions
+
+bool Server::channelExists(const std::string& name) const
+{
+    return (channels.find(name) != channels.end());						// check if channel exists in the map
+}
+
+Channel* Server::getChannel(const std::string& name)
+{
+	std::map<std::string, Channel>::iterator it = channels.find(name);		// find channel by name
+	if (it != channels.end())
+		return &(it->second);
+	return NULL;
+}
+
+void Server::createChannel(const std::string& name) 						 // create a new channel
+{
+	if (!channelExists(name))												// check if channel already exists
+	{
+		channels.insert(std::make_pair(name, Channel(name)));				// insert new channel into map
+		std::cout << "Channel created: " << name << std::endl;				
+	}
+	else
+	{
+		std::cerr << "Channel already exists: " << name << std::endl;
+	}
+}
+
+void Server::removeChannel(const std::string& name)
+{
+	std::map<std::string, Channel>::iterator it = channels.find(name);			// find channel by name
+	if (it != channels.end())													// if channel found, erase it from map
+	{
+		channels.erase(it);
+		std::cout << "Channel removed: " << name << std::endl;
+	}
+	else
+	{
+		std::cerr << "Channel not found: " << name << std::endl;
+	}
+}
+
+// End of channel management functions
 
 void Server::SendMessage(int client_fd, const std::vector<std::string> &line)
 {
@@ -334,7 +482,7 @@ void Server::ProcessCommand(int client_fd, const std::vector<std::string> &line)
 {
 	size_t client_index = findClientbyFd(client_fd);
 	std::string command = line[0];
-
+	
 	for (size_t i = 0; i < command.size(); i++)
 		command[i] = toupper(command[i]);
 	
@@ -350,38 +498,82 @@ void Server::ProcessCommand(int client_fd, const std::vector<std::string> &line)
 	else if (command == "PRIVMSG")
 		HandlePrivMsg(client_fd, line);
 	else if (command == "QUIT")
-		HandleQuit(client_fd);
+		HandleQuit(client_fd);		//later implement HandleQuit(client_fd);
 	else if (clients[client_index].getIsInChannel() == true)
 		SendMessage(client_fd, line);
 	else
 		std::cerr << "Unknown command from client_fd: " << client_fd << " Command: " << command << std::endl;
 }
 
-
-
-void Server::RemoveClient(int client_fd)
+void Server::RemoveClient(int client_fd)    // We have to QUIT twice to quit once !!!! ERROR !!!! 
 {
-	close (client_fd);
-    for (size_t i = 0; i < fds.size(); i++)
+    /*  pollfd entfernen */
+    for (size_t i = 0; i < fds.size(); ++i)
     {
         if (fds[i].fd == client_fd)
         {
             fds.erase(fds.begin() + i);
-			std::cout << "Pollfd removed, client_fd: " << client_fd << " total fds: " << fds.size() << std::endl;
-            break;  							// Found it, stop searching
+            std::cout << "Pollfd removed, client_fd: "
+                      << client_fd
+                      << " total fds: "
+                      << fds.size()
+                      << std::endl;
+            break;
         }
     }
 
-	for (size_t i = 0; i < clients.size(); i++)
-	{
-		if (clients[i].getFd() == client_fd)
-		{
-			clients.erase(clients.begin() + i);
-			std::cout << "Client removed, client_fd: " << client_fd << " total clients: " << clients.size() << std::endl;
-			break;
-		}
-	}
+    /*  remove Client-Objekt  */
+    for (size_t i = 0; i < clients.size(); ++i)
+    {
+        if (clients[i].getFd() == client_fd)
+        {
+            clients.erase(clients.begin() + i);
+            std::cout << "Client removed, client_fd: "
+                      << client_fd
+                      << " total clients: "
+                      << clients.size()
+                      << std::endl;
+            break;
+        }
+    }
+
+    /*  close Socket */
+    
+	close(client_fd);
+	
 }
+
+
+// void Server::RemoveClient(int client_fd)
+// {
+// 	close (client_fd);
+//     for (size_t i = 0; i < fds.size(); i++)
+//     {
+//         if (fds[i].fd == client_fd)
+//         {
+//             fds.erase(fds.begin() + i);
+// 			std::cout << "Pollfd removed, client_fd: " << client_fd << " total fds: " << fds.size() << std::endl;
+            
+// 			if (clients[i-1].getFd() == client_fd)
+// 			{
+// 				clients.erase(clients.begin() + i-1);
+// 				std::cout << "Client removed, client_fd: " << client_fd << " total clients: " << clients.size() << std::endl;
+// 				break;
+// 			}
+			
+//         }
+//     }
+
+	// for (size_t i = 0; i < clients.size(); i++)
+	// {
+	// 	if (clients[i].getFd() == client_fd)
+	// 	{
+	// 		clients.erase(clients.begin() + i);
+	// 		std::cout << "Client removed, client_fd: " << client_fd << " total clients: " << clients.size() << std::endl;
+	// 		break;
+	// 	}
+	// }
+// }
 
 void Server::ClearClients()
 {

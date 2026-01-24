@@ -1,4 +1,5 @@
 #include "Channel.hpp"
+#include "Client.hpp"
 
 Channel::Channel(const std::string& name)
     : name(name), topic(""), password(""), inviteOnly(false), topicRestricted(false), userLimit(0)
@@ -31,15 +32,20 @@ Channel::~Channel()
 }
 
 
-void Channel::addUser(int client_fd)
+void Channel::addUser(Client *client)
 {
-    for (size_t i = 0; i < users.size(); i++)
-    {
-        if (users[i] == client_fd)
-            return ;                     // User already in channel
-    }
-    users.push_back(client_fd);
+    std::string client_nick = client->getNickname();
+    channel_clients.insert(std::make_pair(client_nick, client));
+
+
+    // for (size_t i = 0; i < users.size(); i++)
+    // {
+    //     if (users[i] == client_fd)
+    //         return ;                     // User already in channel
+    // }
+    // users.push_back(client_fd);
 }
+
 void Channel::removeUser(int client_fd)
 {
     for (size_t i = 0; i < users.size(); i++)
@@ -75,18 +81,38 @@ void Channel::addOperator(int client_fd)
 
 void Channel::removeOperator(int client_fd)
 {
-
+    for (size_t i = 0; i < operators.size(); i++)
+    {
+        if (operators[i] == client_fd)
+        {
+            operators.erase(operators.begin() + i);
+            break;
+        }
+    }
 }
+
 
 bool Channel::isUserInChannel(int client_fd) const
 {
-
+    for (size_t i = 0; i < users.size(); i++)
+    {
+        if (users[i] == client_fd)
+            return true;
+    }
+    return false;
 }
+
 
 bool Channel::isOperator(int client_fd) const
 {
-
+    for (size_t i = 0; i < operators.size(); i++)
+    {
+        if (operators[i] == client_fd)
+            return true;
+    }
+    return false;
 }
+
 
         // void addInvitedUser(int client_fd);
         // bool isUserInvited(int client_fd) const;

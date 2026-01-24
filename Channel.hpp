@@ -1,7 +1,14 @@
 #ifndef CHANNEL_HPP
-#define CHANNEL_HPP
+# define CHANNEL_HPP
 
-# include "Server.hpp"
+//#include "Server.hpp"
+# include <string>
+# include <vector>
+# include <iostream>
+# include <map>
+
+class Client;
+
 
 class Channel
 {
@@ -11,7 +18,7 @@ class Channel
         Channel& operator=(const Channel& other);
         ~Channel();
 
-        void addUser(int client_fd);
+        void addUser(Client *client);
         void removeUser(int client_fd);
         void addOperator(int client_fd);
         void removeOperator(int client_fd);
@@ -31,6 +38,8 @@ class Channel
         void setUserLimit(int limit);
 
     private:
+        std::map<std::string, Client*> channel_clients; 
+
         std::vector<int> users;
         std::vector<int> operators;
         std::vector<int> invitedUsers;
