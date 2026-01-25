@@ -6,7 +6,7 @@
 /*   By: judith <judith@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/24 18:05:00 by codex             #+#    #+#             */
-/*   Updated: 2026/01/24 18:05:00 by codex            ###   ########.fr       */
+/*   Updated: 2026/01/25 17:00:25 by judith           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -328,6 +328,54 @@ void Server::HandlePrivMsg(int client_fd, const std::vector<std::string> &line)
 	sendLine(client_fd, "401 " + target + " :No such nick/channel");												// otherwise, no channel nor user found
 }
 
+void Server::HandleTopic(int client_fd, const std::vector<std::string> &line)
+{
+	int client_index = findClientbyFd(client_fd);
+	if (client_index < 0)
+		return ;
+		
+	if (line.size() < 2)
+	{
+		sendLine(client_fd, "461 TOPIC :Not enough parameters");				
+		return ;
+	}
+	
+	if (clients[client_index].getIsInChannel() == false)
+	{
+		sendLine(client_fd, "442 :You're not on that channel");
+		return ;
+	}
+	
+	Channel *ch = getChannel(line[1]);
+	if (!ch)
+		return ;
+
+	std::string nick = clients[client_index].getNickname();
+	if (line.size() == 2)		
+	{
+		std::string current_topic = ch->getTopic();
+		if (!current_topic.empty())
+		{
+			sendLine(client_fd, "332 " + nick + " " + line[1] + " :" + current_topic);							// 332: RPL_TOPIC
+			return ;
+		}
+		sendLine(client_fd, "331 " + nick + " " + line[1] + " :No topic is set");
+		return ;
+	}
+	if (ch->getTopicRestricted() == true && !ch->isOperator(client_fd))
+	{
+		sendLine(client_fd, "482 :You're not channel operator");
+		return ;
+	}
+	std::string topic = line[2];
+	ch->setTopic(topic);
+	std::map<std::string, int> members = ch->getClients();
+	for (std::map<std::string, int>::iterator it = members.begin(); it != members.end(); ++it)
+		sendLine(it->second, ":" + nick + "!"+ clients[client_index].getUsername() + "@host TOPIC " + line[1] + " :" + topic);
+	
+	std::cout << "Client fd: " << client_fd << " set TOPIC for channel " << line[1] << " to: " << topic << std::endl;
+}
+
 void Server::HandleQuit(int client_fd)
 {
 	std::cout << "Client fd: " << client_fd << " is quitting." << std::endl;
@@ -393,6 +441,8 @@ void Server::ProcessCommand(int client_fd, const std::string &line)
 		HandleJoin(client_fd, tokens);
 	else if (command == "PRIVMSG")
 		HandlePrivMsg(client_fd, tokens);
+	else if (command == "TOPIC")
+		HandleTopic(client_fd, tokens);
 	else if (command == "QUIT")
 		HandleQuit(client_fd);
 	else if (clients[client_index].getIsInChannel())

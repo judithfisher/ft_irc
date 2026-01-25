@@ -6,7 +6,7 @@
 /*   By: judith <judith@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 17:25:24 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/24 16:23:15 by judith           ###   ########.fr       */
+/*   Updated: 2026/01/25 17:03:24 by judith           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,11 +14,7 @@
 #include <sstream>
 #include <stdexcept>
 
-Client::Client(int client_fd)
-	: client_fd(client_fd)
-	, isInChannel(false)
-	, passAccepted(false)
-	, isRegistered(false)
+Client::Client(int client_fd): client_fd(client_fd), isOperator(false), isInChannel(false), passAccepted(false), isRegistered(false)
 {
 }
 
@@ -54,6 +50,11 @@ int Client::getFd()
 bool Client::getIsInChannel() const
 {
 	return (this->isInChannel);
+}
+
+bool Client::getIsOperator() const
+{
+	return (this->isOperator);
 }
 
 void Client::setNickname(const std::string &nickname)

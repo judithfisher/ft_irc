@@ -27,6 +27,7 @@ class Channel
 		const std::vector<int> &getUsers() const;
 		size_t getUserCount() const;
 		std::string getTopic() const;
+		bool getTopicRestricted() const;
 
 		void setTopic(const std::string &newTopic);
 		void setPassword(const std::string &newPassword);

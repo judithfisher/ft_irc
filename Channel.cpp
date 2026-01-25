@@ -1,13 +1,7 @@
 #include "Channel.hpp"
 #include "Server.hpp"
 
-Channel::Channel(const std::string &name)
-	: name(name)
-	, topic("")
-	, password("")
-	, inviteOnly(false)
-	, topicRestricted(false)
-	, userLimit(0)
+Channel::Channel(const std::string &name): name(name), topic(""), password(""), inviteOnly(false), topicRestricted(false), userLimit(0)
 {
 }
 
@@ -122,19 +116,32 @@ bool Channel::isOperator(int client_fd) const
 // broadcast to all clients
 void Channel::broadcast(const std::string &msg)
 {
-	for (std::map<std::string, int>::iterator it = channel_clients.begin();
-		it != channel_clients.end(); ++it)
-	{
+	for (std::map<std::string, int>::iterator it = channel_clients.begin(); it != channel_clients.end(); ++it)
 		Server::sendLine(it->second, msg);
-	}
 }
 
 const std::map<std::string, int> &Channel::getClients() const
 {
-	return channel_clients;
+	return (channel_clients);
 }
 
 size_t Channel::getUserCount() const
 {
-	return users.size();
+    size_t user_size = this->users.size();
+	return (user_size);
+}
+
+std::string Channel::getTopic() const
+{
+	return (this->topic);
+}
+
+bool Channel::getTopicRestricted() const
+{
+	return (this->topicRestricted);
+}
+
+void Channel::setTopic(const std::string &newTopic)
+{
+	this->topic = newTopic;
 }
