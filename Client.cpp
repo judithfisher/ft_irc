@@ -10,13 +10,17 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Server.hpp"
 #include "Client.hpp"
+#include <sstream>
+#include <stdexcept>
 
-Client::Client(int client_fd): client_fd(client_fd)
+Client::Client(int client_fd)
+	: client_fd(client_fd)
+	, isInChannel(false)
+	, passAccepted(false)
+	, isRegistered(false)
 {
-	// std::cout << "This is my client fd: " << this->client_fd << std::endl;
-}	
+}
 
 Client::Client(const Client &other)
 {
@@ -28,9 +32,12 @@ Client &Client::operator=(const Client &other)
 	if (this != &other)
 	{
 		this->client_fd = other.client_fd;
+		this->isInChannel = other.isInChannel;
+		this->passAccepted = other.passAccepted;
+		this->isRegistered = other.isRegistered;
+		this->buffer = other.buffer;
 		this->nickname = other.nickname;
 		this->username = other.username;
-		// copy attributes here when added
 	}
 	return (*this);
 }
@@ -51,17 +58,17 @@ bool Client::getIsInChannel() const
 
 void Client::setNickname(const std::string &nickname)
 {
-    this->nickname = nickname;
+	this->nickname = nickname;
 }
 
 void Client::setUsername(const std::string &username)
 {
-    this->username = username;
+	this->username = username;
 }
 
 void Client::setIsInChannel()
 {
-    this->isInChannel = true;
+	this->isInChannel = true;
 }
 
 void Client::setPassAccepted()
@@ -71,17 +78,17 @@ void Client::setPassAccepted()
 
 void Client::setRegistered()
 {
-    this->isRegistered = true;
+	this->isRegistered = true;
 }
 
 std::string Client::getUsername() const
 {
-    return (this->username);
+	return (this->username);
 }
 
 std::string Client::getNickname() const
 {
-    return (this->nickname);
+	return (this->nickname);
 }
 
 
@@ -95,7 +102,7 @@ bool Client::getIsRegistered() const
 	return (this->isRegistered);
 }
 
-void Client::AppendToBuffer(const std::string rec_buffer)
+void Client::AppendToBuffer(const std::string &rec_buffer)
 {
 	buffer += rec_buffer;
 	if (buffer.size() > MAX_BUFFER_SIZE)
@@ -114,49 +121,32 @@ std::vector<std::string> split(const std::string &input)
     return (tokens);
 }
 
-// "USER test\r\nJOIN #chan\r\nPRIVMSG #chan :Hi\r\n"
-// netcat only sends \n not \r\n, so we need to handle that case too
-// std::vector<std::string> Client::ExtractCompleteCommands(std::string &input)
-// {
-// 	std::string token;
-// 	std::vector<std::string> commands;
-// 	std::istringstream istreami(input);
-
-
-//     while (istreami >> token)
-//         commands.push_back(token);
-
-//     return (commands);
-
-
-// }
-
 std::vector<std::string> Client::ExtractCompleteCommands()
 {
-    std::vector<std::string> commands;  // ✅ Vector of LINES (not tokens!)
-    
-    while (true)
-    {
-        // Find newline (\r\n or \n)
-        size_t pos = buffer.find('\n');
-        
-        if (pos == std::string::npos)
-            break;
-        
-        // Extract line before \n
-        std::string line = buffer.substr(0, pos);
-        
-        // Remove trailing \r if present
-        if (!line.empty() && line[line.length() - 1] == '\r')
-            line.erase(line.length() - 1);
-        
-        // Add non-empty lines
-        if (!line.empty())
-            commands.push_back(line);  // ✅ Push the WHOLE LINE
-        
-        // Remove from buffer
-        buffer.erase(0, pos + 1);
-    }
-    
-    return commands;  // ✅ Returns ["NICK alice", "USER alice 0 * :Alice", ...]
+	std::vector<std::string> commands;
+
+	while (true)
+	{
+		// Find newline (\r\n or \n)
+		size_t pos = buffer.find('\n');
+
+		if (pos == std::string::npos)
+			break;
+
+		// Extract line before \n
+		std::string line = buffer.substr(0, pos);
+
+		// Remove trailing \r if present
+		if (!line.empty() && line[line.length() - 1] == '\r')
+			line.erase(line.length() - 1);
+
+		// Add non-empty lines
+		if (!line.empty())
+			commands.push_back(line);
+
+		// Remove from buffer
+		buffer.erase(0, pos + 1);
+	}
+
+	return commands;
 }

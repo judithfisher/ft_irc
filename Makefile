@@ -20,6 +20,10 @@ SRCS = 	Client.cpp \
 		checkers.cpp \
 		main.cpp \
 		Server.cpp \
+		ServerSocket.cpp \
+		ServerCommands.cpp \
+		ServerChannels.cpp \
+		ServerUtils.cpp \
 		Channel.cpp
 
 OBJS = $(SRCS:.cpp=.o)

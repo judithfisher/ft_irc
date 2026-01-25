@@ -67,13 +67,14 @@ class Server
 		static void SignalHandler(int signum);
 
 		void InitServerSocket();
-		void static sendLine(int fd, const std::string &msg);
+		static void sendLine(int fd, const std::string &msg);
 		void RunServer();
 		void AcceptClients();
 		void Greeting(int client_fd);
-		size_t findClientbyFd(int client_fd);
+		int findClientbyFd(int client_fd);
 		void ReceiveData(int client_fd);
 		
+		std::vector<std::string> ParseCommand(const std::string &line);
 		void ProcessCommand(int client_fd, const std::string& line);
 		void HandlePass(int client_fd, const std::vector<std::string> &line);
     	void HandleNick(int client_fd, const std::vector<std::string> &line);

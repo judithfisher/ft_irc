@@ -13,11 +13,10 @@
 #ifndef CLIENT_HPP
 # define CLIENT_HPP
 
-# include "Server.hpp"
+# include <string>
+# include <vector>
 
 # define MAX_BUFFER_SIZE 2048
-
-class Server;
 
 class Client
 {
@@ -42,9 +41,8 @@ class Client
 		std::string getUsername() const;
 		bool getPassAccepted() const; 
 		bool getIsRegistered() const;
-		void AppendToBuffer(const std::string rec_buffer);
+		void AppendToBuffer(const std::string &rec_buffer);
 		std::vector<std::string> ExtractCompleteCommands();
-		
 
 	private:
 		int	client_fd;
@@ -54,8 +52,6 @@ class Client
 		std::string buffer;
 		std::string nickname;
 		std::string username;
-
-		
 
 };
 

@@ -1,0 +1,404 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ServerCommands.cpp                                 :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: judith <judith@student.42.fr>              +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/01/24 18:05:00 by codex             #+#    #+#             */
+/*   Updated: 2026/01/24 18:05:00 by codex            ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "Server.hpp"
+
+// IRC tokenization with support for the trailing parameter (after ':').
+// The trailing parameter can contain spaces (e.g. PRIVMSG #chan :hello world).
+std::vector<std::string> Server::ParseCommand(const std::string &line)
+{
+	std::vector<std::string> tokens;
+	std::string current;
+	bool in_trailing = false;
+
+	for (size_t i = 0; i < line.length(); i++)
+	{
+		char c = line[i];
+
+		if (c == ':' && !in_trailing && (i == 0 || line[i - 1] == ' '))
+		{
+			if (!current.empty())
+			{
+				tokens.push_back(current);
+				current.clear();
+			}
+			in_trailing = true;
+			continue;
+		}
+
+		if (c == ' ' && !in_trailing)
+		{
+			if (!current.empty())
+			{
+				tokens.push_back(current);
+				current.clear();
+			}
+		}
+		else
+		{
+			current += c;
+		}
+	}
+
+	if (!current.empty())
+		tokens.push_back(current);
+
+	return tokens;
+}
+
+void Server::Greeting(int client_fd)
+{
+	sendLine(client_fd, "375 :- IRC SERVER 42 Message of the Day -");
+
+	sendLine(client_fd, " \033[1;35m░██████░█████████    ░██████       ░██████   ░██████████ ░█████████  ░██    ░██ ░██████████ ░█████████        ░████    ░██████");
+	sendLine(client_fd, "   ░██  ░██     ░██  ░██   ░██     ░██   ░██  ░██         ░██     ░██ ░██    ░██ ░██         ░██     ░██      ░██ ██   ░██   ░██");
+	sendLine(client_fd, "   ░██  ░██     ░██ ░██           ░██         ░██         ░██     ░██ ░██    ░██ ░██         ░██     ░██     ░██  ██         ░██");
+	sendLine(client_fd, "   ░██  ░█████████  ░██            ░████████  ░█████████  ░█████████  ░██    ░██ ░█████████  ░█████████     ░██   ██     ░█████");
+	sendLine(client_fd, "   ░██  ░██   ░██   ░██                   ░██ ░██         ░██   ░██    ░██  ░██  ░██         ░██   ░██      ░█████████  ░██");
+	sendLine(client_fd, "   ░██  ░██    ░██   ░██   ░██     ░██   ░██  ░██         ░██    ░██    ░██░██   ░██         ░██    ░██          ░██   ░██");
+	sendLine(client_fd, " ░██████░██     ░██   ░██████       ░██████   ░██████████ ░██     ░██    ░███    ░██████████ ░██     ░██         ░██   ░████████\033[0m");
+
+	sendLine(client_fd, " ");
+	sendLine(client_fd, "\033[1;35mNOTICE * :Welcome to IRC SERVER 42");
+	sendLine(client_fd, "\033[1;35mNOTICE * :Authentication required.");
+	sendLine(client_fd, "\033[1;35mNOTICE * :");
+	sendLine(client_fd, "\033[1;35mNOTICE * :Please authenticate first:");
+	sendLine(client_fd, "\033[1;35mNOTICE * :PASS <password>");
+	sendLine(client_fd, "\033[1;35mNOTICE * :");
+	sendLine(client_fd, "\033[1;35mNOTICE * :Then continue with:");
+	sendLine(client_fd, "\033[1;35mNOTICE * :NICK <nickname>");
+	sendLine(client_fd, "\033[1;35mNOTICE * :USER <username> 0 * :realname");
+}
+
+void Server::HandlePass(int client_fd, const std::vector<std::string> &line)
+{
+	int client_index = findClientbyFd(client_fd);
+	if (client_index < 0)
+		return;
+	if (line.size() < 2)
+	{
+		std::cerr << "Client fd: " << client_fd << " sent PASS without parameter." << std::endl;
+		return;
+	}
+	std::string pass = line[1];
+	if (pass.empty())
+	{
+		std::cerr << "Client fd: " << client_fd << " provided empty password." << std::endl;
+		return;
+	}
+	if (pass == this->password)
+	{
+		clients[client_index].setPassAccepted();
+		std::cout << "Client fd: " << client_fd << " provided correct password." << std::endl;
+	}
+	else
+		std::cout << "Client fd: " << client_fd << " provided incorrect password." << std::endl;
+}
+
+void Server::HandleNick(int client_fd, const std::vector<std::string> &line)
+{
+	int client_index = findClientbyFd(client_fd);
+	if (client_index < 0)
+		return;
+	if (line.size() < 2)
+	{
+		std::cerr << "Client fd: " << client_fd << " sent NICK without parameter." << std::endl;
+		return;
+	}
+	std::string nickname = line[1];
+	if (clients[client_index].getPassAccepted() == true)
+	{
+		for (size_t i = 0; i < clients.size(); i++)
+		{
+			if (clients[i].getNickname() == nickname)
+			{
+				std::cerr << "Client fd: " << client_fd << " attempted to set duplicate nickname: " << nickname << std::endl;
+				return;
+			}
+		}
+		clients[client_index].setNickname(nickname);
+		std::cout << "Client fd: " << client_fd << " set nickname to: " << nickname << std::endl;
+		if (clients[client_index].getNickname().size() != 0
+			&& clients[client_index].getUsername().size() != 0)
+		{
+			clients[client_index].setRegistered();
+		}
+	}
+	else
+		std::cerr << "Client fd: " << client_fd
+			<< " attempted to set nickname without passing authentication." << std::endl;
+}
+
+void Server::HandleUser(int client_fd, const std::vector<std::string> &line)
+{
+	int client_index = findClientbyFd(client_fd);
+	if (client_index < 0)
+		return;
+	if (line.size() < 2)
+	{
+		std::cerr << "Client fd: " << client_fd << " sent USER without parameter." << std::endl;
+		return;
+	}
+	std::string username = line[1];
+	if (clients[client_index].getPassAccepted() == true)
+	{
+		clients[client_index].setUsername(username);
+		std::cout << "Client fd: " << client_fd << " set username to: " << username << std::endl;
+		if (clients[client_index].getNickname().size() != 0
+			&& clients[client_index].getUsername().size() != 0)
+		{
+			clients[client_index].setRegistered();
+		}
+	}
+	else
+		std::cerr << "Client fd: " << client_fd
+			<< " attempted to set username without passing authentication." << std::endl;
+}
+
+void Server::HandleJoin(int client_fd, const std::vector<std::string> &line)
+{
+	int client_index = findClientbyFd(client_fd);
+	if (client_index < 0)
+		return;
+
+	if (!clients[client_index].getIsRegistered())
+	{
+		// 451: ERR_NOTREGISTERED
+		sendLine(client_fd, "451 :You have not registered");
+		return;
+	}
+
+	if (line.size() < 2)
+	{
+		// 461: ERR_NEEDMOREPARAMS
+		sendLine(client_fd, "461 JOIN :Not enough parameters");
+		return;
+	}
+
+	std::string channel_name = line[1];
+
+	if (channel_name.empty() || channel_name[0] != '#')
+	{
+		// 403: ERR_NOSUCHCHANNEL
+		sendLine(client_fd, "403 " + channel_name + " :No such channel");
+		return;
+	}
+
+	if (!channelExists(channel_name))
+		createChannel(channel_name);
+
+	Channel *ch = getChannel(channel_name);
+	if (!ch)
+		return;
+
+	if (ch->isUserInChannel(client_fd))
+	{
+		std::cout << "Already in channel" << std::endl;
+		return;
+	}
+
+	// Store fd + nick in channel to avoid Client* pointer invalidation.
+	ch->addUser(clients[client_index].getFd(), clients[client_index].getNickname());
+
+	if (ch->getUserCount() == 1)
+		ch->addOperator(client_fd);
+
+	clients[client_index].setIsInChannel();
+
+	std::string nick = clients[client_index].getNickname();
+	std::string user = clients[client_index].getUsername();
+	if (user.empty())
+		user = "user";
+
+	// 1) Broadcast JOIN to all members
+	std::string joinMsg = ":" + nick + "!" + user + "@host JOIN " + channel_name;
+	const std::map<std::string, int> &members = ch->getClients();
+	for (std::map<std::string, int>::const_iterator it = members.begin();
+		it != members.end(); ++it)
+	{
+		sendLine(it->second, joinMsg);
+	}
+
+	// 2) Topic (only to joining user)
+	// 331: RPL_NOTOPIC
+	sendLine(client_fd, "331 " + nick + " " + channel_name + " :No topic is set");
+
+	// 3) Names list (only to joining user)
+	// 353: RPL_NAMREPLY
+	std::string names = "353 " + nick + " = " + channel_name + " :";
+	for (std::map<std::string, int>::const_iterator it = members.begin();
+		it != members.end(); ++it)
+	{
+		if (ch->isOperator(it->second))
+			names += "@";
+		names += it->first;
+		names += " ";
+	}
+	sendLine(client_fd, names);
+
+	// 4) End of names
+	// 366: RPL_ENDOFNAMES
+	sendLine(client_fd, "366 " + nick + " " + channel_name + " :End of /NAMES list");
+
+	std::cout << "Client " << nick << " joined " << channel_name << std::endl;
+}
+
+void Server::HandlePrivMsg(int client_fd, const std::vector<std::string> &line)
+{
+	int client_index = findClientbyFd(client_fd);
+	if (client_index < 0)
+		return;
+	if (line.size() < 2)
+	{
+		// 411: ERR_NORECIPIENT
+		sendLine(client_fd, "411 :No recipient given (PRIVMSG)");
+		return;
+	}
+	if (line.size() < 3)
+	{
+		// 412: ERR_NOTEXTTOSEND
+		sendLine(client_fd, "412 :No text to send");
+		return;
+	}
+
+	std::string target = line[1];
+	std::string message;
+	for (size_t i = 2; i < line.size(); i++)
+	{
+			message = line[i];
+			if (i > 2)
+				message = " " + message;
+			message = message + line[i];
+	}
+
+	std::string nick = clients[client_index].getNickname();
+	std::string user = clients[client_index].getUsername();
+	if (user.empty())
+		user = "user";
+
+	std::string payload = ":" + nick + "!" + user + "@host PRIVMSG " + target + " :" + message;
+
+	if (!target.empty() && target[0] == '#')		// if it's a channel
+	{
+		Channel *ch = getChannel(target);
+		if (!ch)
+		{
+			// 403: ERR_NOSUCHCHANNEL
+			sendLine(client_fd, "403 " + target + " :No such channel");
+			return;
+		}
+		if (!ch->isUserInChannel(client_fd))
+		{
+			// 404: ERR_CANNOTSENDTOCHAN
+			sendLine(client_fd, "404 " + target + " :Cannot send to channel");
+			return;
+		}
+
+		const std::map<std::string, int> &members = ch->getClients();
+		for (std::map<std::string, int>::const_iterator it = members.begin(); it != members.end(); it++)			// send to all members in ch(annel)
+		{
+			int target_fd = it->second;
+			if (target_fd != client_fd)																				// except sender					
+				sendLine(target_fd, payload);
+		}
+		std::cout << "Client fd: " << client_fd << " sent PRIVMSG to " << target << ": " << message << std::endl;
+		return;
+	}
+
+	for (size_t i = 0; i < clients.size(); i++)																		// outside if target[0] == '#'], so it's a user	
+	{
+		if (clients[i].getNickname() == target)
+		{
+			sendLine(clients[i].getFd(), payload);
+			std::cout << "Client fd: " << client_fd << " sent PRIVMSG to " << target << ": " << message << std::endl;
+			return ;
+		}
+	}
+
+	// 401: ERR_NOSUCHNICK
+	sendLine(client_fd, "401 " + target + " :No such nick/channel");												// otherwise, no channel nor user found
+}
+
+void Server::HandleQuit(int client_fd)
+{
+	std::cout << "Client fd: " << client_fd << " is quitting." << std::endl;
+	sendLine(client_fd, "\033[2J\033[H");  // Clear screen
+	RemoveClient(client_fd);
+}
+
+void Server::SendMessage(int client_fd, const std::vector<std::string> &line)
+{
+	int client_index = findClientbyFd(client_fd);
+	if (client_index < 0)
+		return;
+	if (clients[client_index].getIsInChannel() == true)
+	{
+		for (size_t i = 1; i < line.size(); i++)
+			std::cout << line[i] << std::endl;
+	}
+	else
+	{
+		std::cerr << "Client fd: " << client_fd
+			<< " attempted to send message without being in a channel." << std::endl;
+	}
+}
+
+void Server::ProcessCommand(int client_fd, const std::string &line)
+{
+	if (line.empty())
+		return;
+
+	std::vector<std::string> tokens = ParseCommand(line);
+	if (tokens.empty())
+		return;
+
+	int client_index = findClientbyFd(client_fd);
+	if (client_index < 0)
+		return;
+
+	std::string command = tokens[0];
+	for (size_t i = 0; i < command.size(); i++)
+		command[i] = std::toupper(command[i]);
+	// IRC commands are case-insensitive.
+
+	std::cout << "[" << client_fd << "] " << command << std::endl;
+
+	if (command == "CAP")
+	{
+		sendLine(client_fd, "CAP * LS :");
+	}
+	else if (command == "PING")
+	{
+		if (tokens.size() > 1)
+			sendLine(client_fd, "PONG ircserv :" + tokens[1]);
+		else
+			sendLine(client_fd, "PONG ircserv");
+	}
+	else if (command == "PASS")
+		HandlePass(client_fd, tokens);
+	else if (command == "NICK")
+		HandleNick(client_fd, tokens);
+	else if (command == "USER")
+		HandleUser(client_fd, tokens);
+	else if (command == "JOIN")
+		HandleJoin(client_fd, tokens);
+	else if (command == "PRIVMSG")
+		HandlePrivMsg(client_fd, tokens);
+	else if (command == "QUIT")
+		HandleQuit(client_fd);
+	else if (clients[client_index].getIsInChannel())
+		SendMessage(client_fd, tokens);
+	else
+	{
+		std::cout << "Unknown command: " << command << std::endl;
+	}
+}
