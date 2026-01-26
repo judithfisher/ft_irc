@@ -6,7 +6,7 @@
 /*   By: judith <judith@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/24 18:05:00 by codex             #+#    #+#             */
-/*   Updated: 2026/01/26 19:07:50 by judith           ###   ########.fr       */
+/*   Updated: 2026/01/26 19:13:29 by judith           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -377,6 +377,59 @@ void Server::HandleTopic(int client_fd, const std::vector<std::string> &line)
 	std::cout << "Client fd: " << client_fd << " set TOPIC for channel " << line[1] << " to: " << topic << std::endl;
 }
 
+void Server::HandleInvite(int client_fd, const std::vector<std::string> &line)
+{
+	if (line.size() < 3)
+	{
+		sendLine(client_fd, "461 INVITE :Not enough parameters");
+		return ;
+	}
+	int client_index = findClientbyFd(client_fd);
+	if (client_index < 0)	
+		return ;
+
+	if (clients[client_index].getIsRegistered() == false)
+	{
+		sendLine(client_fd, "451 :You have not registered");
+		return ;
+	}
+	
+	if (clients[client_index].getIsInChannel() == false)
+	{
+		sendLine(client_fd, "442 :You're not on that channel");
+		return ;
+	}
+	
+	std::string channel_name = line[2];
+	Channel *ch = getChannel(channel_name);
+	if (!ch)
+		return ;
+	
+	if (!ch->isOperator(client_fd))
+	{
+		sendLine(client_fd, "482 :You're not channel operator");
+		return ;
+	}
+	std::string target_nick = line[1];
+	int target_fd = -1;
+	for (size_t i = 0; i < clients.size(); i++)
+	{
+		if (clients[i].getNickname() == target_nick)
+		{
+			target_fd = clients[i].getFd();
+			break ;
+		}
+	}
+	if (target_fd == -1)
+	{
+		sendLine(client_fd, "401 " + target_nick + " :No such nick/channel");
+		return ;
+	}
+	ch->addUser(target_fd, target_nick);
+	sendLine(target_fd, ":" + clients[client_index].getNickname() + "!" + clients[client_index].getUsername() + "@host INVITE " + target_nick + " " + channel_name);
+	std::cout << "Client fd: " << client_fd << " invited " << target_nick << " to channel " << channel_name << std::endl;
+}
+
 void Server::HandleKick(int client_fd, const std::vector<std::string> &line)
 {
 	if (line.size() < 3)
@@ -502,6 +555,8 @@ void Server::ProcessCommand(int client_fd, const std::string &line)
 		HandlePrivMsg(client_fd, tokens);
 	else if (command == "TOPIC")
 		HandleTopic(client_fd, tokens);
+	else if (command == "INVITE")
+		HandleInvite(client_fd, tokens);
 	else if (command == "KICK")
 		HandleKick(client_fd, tokens);
 	else if (command == "QUIT")
