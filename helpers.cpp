@@ -10,7 +10,6 @@ void log_error(const std::string &where)
 		<< std::endl;
 }
 
-
 // RFC-compliant line ending for IRC replies (CRLF).
 void Server::sendLine(int fd, const std::string &msg)
 {

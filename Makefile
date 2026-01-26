@@ -6,7 +6,7 @@
 #    By: judith <judith@student.42.fr>              +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/01/09 15:25:05 by jfischer          #+#    #+#              #
-#    Updated: 2026/01/24 16:21:47 by judith           ###   ########.fr        #
+#    Updated: 2026/01/26 18:17:51 by judith           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -18,12 +18,12 @@ FLAGS = -Wall -Wextra -Werror -std=c++98
 
 SRCS = 	Client.cpp \
 		checkers.cpp \
+		helpers.cpp \
 		main.cpp \
 		Server.cpp \
 		ServerSocket.cpp \
 		ServerCommands.cpp \
 		ServerChannels.cpp \
-		ServerUtils.cpp \
 		Channel.cpp
 
 OBJS = $(SRCS:.cpp=.o)

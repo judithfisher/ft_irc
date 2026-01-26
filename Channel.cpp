@@ -145,3 +145,8 @@ void Channel::setTopic(const std::string &newTopic)
 {
 	this->topic = newTopic;
 }
+
+void Channel::setTopicRestricted(bool topicRestricted)
+{
+	this->topicRestricted = topicRestricted;
+}
