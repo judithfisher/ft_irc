@@ -6,7 +6,7 @@
 /*   By: judith <judith@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 17:25:24 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/26 17:42:10 by judith           ###   ########.fr       */
+/*   Updated: 2026/01/26 19:07:21 by judith           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,6 +80,11 @@ void Client::setPassAccepted()
 void Client::setRegistered()
 {
 	this->isRegistered = true;
+}
+
+void Client::setIsOperator(bool status)
+{
+	this->isOperator = status;
 }
 
 std::string Client::getUsername() const

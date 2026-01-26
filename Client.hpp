@@ -6,7 +6,7 @@
 /*   By: judith <judith@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 16:45:13 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/26 17:39:51 by judith           ###   ########.fr       */
+/*   Updated: 2026/01/26 19:07:16 by judith           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,7 @@ class Client
 		void setIsInChannel();
 		void setPassAccepted();
 		void setRegistered();
+		void setIsOperator(bool status);
 
 		
 		//getters
@@ -49,7 +50,7 @@ class Client
 
 	private:
 		int	client_fd;
-		int isOperator;
+		bool isOperator;
 		bool isInChannel;
 		bool passAccepted;
 		bool isRegistered;

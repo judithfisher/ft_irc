@@ -6,7 +6,7 @@
 /*   By: judith <judith@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/24 18:05:00 by codex             #+#    #+#             */
-/*   Updated: 2026/01/26 18:06:18 by judith           ###   ########.fr       */
+/*   Updated: 2026/01/26 19:07:50 by judith           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -153,15 +153,14 @@ void Server::HandleUser(int client_fd, const std::vector<std::string> &line)
 	{
 		clients[client_index].setUsername(username);
 		std::cout << "Client fd: " << client_fd << " set username to: " << username << std::endl;
-		if (clients[client_index].getNickname().size() != 0
-			&& clients[client_index].getUsername().size() != 0)
+		if (clients[client_index].getNickname().size() != 0 && clients[client_index].getUsername().size() != 0)
 		{
 			clients[client_index].setRegistered();
+			sendLine(client_fd, "001 " + clients[client_index].getNickname() + " :Welcome to the IRC SERVER 42!");
 		}
 	}
 	else
-		std::cerr << "Client fd: " << client_fd
-			<< " attempted to set username without passing authentication." << std::endl;
+		std::cerr << "Client fd: " << client_fd << " attempted to set username without passing authentication." << std::endl;
 }
 
 void Server::HandleJoin(int client_fd, const std::vector<std::string> &line)
@@ -194,8 +193,11 @@ void Server::HandleJoin(int client_fd, const std::vector<std::string> &line)
 	}
 
 	if (!channelExists(channel_name))
+	{
 		createChannel(channel_name);
-
+		clients[client_index].setIsOperator(true);
+	}
+		
 	Channel *ch = getChannel(channel_name);
 	if (!ch)
 		return;
@@ -222,11 +224,8 @@ void Server::HandleJoin(int client_fd, const std::vector<std::string> &line)
 	// 1) Broadcast JOIN to all members
 	std::string joinMsg = ":" + nick + "!" + user + "@host JOIN " + channel_name;
 	const std::map<std::string, int> &members = ch->getClients();
-	for (std::map<std::string, int>::const_iterator it = members.begin();
-		it != members.end(); ++it)
-	{
+	for (std::map<std::string, int>::const_iterator it = members.begin(); it != members.end(); ++it)
 		sendLine(it->second, joinMsg);
-	}
 
 	// 2) Topic (only to joining user)
 	// 331: RPL_NOTOPIC
