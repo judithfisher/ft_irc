@@ -6,7 +6,7 @@
 /*   By: judith <judith@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/24 18:05:00 by codex             #+#    #+#             */
-/*   Updated: 2026/01/25 17:00:25 by judith           ###   ########.fr       */
+/*   Updated: 2026/01/26 18:06:18 by judith           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -356,6 +356,7 @@ void Server::HandleTopic(int client_fd, const std::vector<std::string> &line)
 		std::string current_topic = ch->getTopic();
 		if (!current_topic.empty())
 		{
+			ch->setTopicRestricted(true);
 			sendLine(client_fd, "332 " + nick + " " + line[1] + " :" + current_topic);							// 332: RPL_TOPIC
 			return ;
 		}
@@ -369,11 +370,70 @@ void Server::HandleTopic(int client_fd, const std::vector<std::string> &line)
 	}
 	std::string topic = line[2];
 	ch->setTopic(topic);
+	ch->setTopicRestricted(true);
 	std::map<std::string, int> members = ch->getClients();
 	for (std::map<std::string, int>::iterator it = members.begin(); it != members.end(); ++it)
 		sendLine(it->second, ":" + nick + "!"+ clients[client_index].getUsername() + "@host TOPIC " + line[1] + " :" + topic);
 	
 	std::cout << "Client fd: " << client_fd << " set TOPIC for channel " << line[1] << " to: " << topic << std::endl;
+}
+
+void Server::HandleKick(int client_fd, const std::vector<std::string> &line)
+{
+	if (line.size() < 3)
+	{
+		sendLine(client_fd, "461 KICK :Not enough parameters");
+		return ;
+	}
+	int client_index = findClientbyFd(client_fd);
+	if (client_index < 0)	
+		return ;
+
+	if (clients[client_index].getIsRegistered() == false)
+	{
+		sendLine(client_fd, "451 :You have not registered");
+		return ;
+	}
+	
+	if (clients[client_index].getIsInChannel() == false)
+	{
+		sendLine(client_fd, "442 :You're not on that channel");
+		return ;
+	}
+	
+	std::string channel_name = line[1];
+	Channel *ch = getChannel(channel_name);
+	if (!ch)
+		return ;
+	
+	if (!ch->isOperator(client_fd))
+	{
+		sendLine(client_fd, "482 :You're not channel operator");
+		return ;
+	}
+	std::string target_nick = line[2];
+	int target_fd = -1;
+	for (size_t i = 0; i < clients.size(); i++)
+	{
+		if (clients[i].getNickname() == target_nick)
+		{
+			target_fd = clients[i].getFd();
+			break ;
+		}
+	}
+	if (target_fd == -1 || !ch->isUserInChannel(target_fd))
+	{
+		sendLine(client_fd, "441 " + target_nick + " " + channel_name + " :They aren't on that channel");
+		return ;
+	}
+	
+	std::string kick_msg = ":" + clients[client_index].getNickname() + "!" + clients[client_index].getUsername() + "@host KICK " + channel_name + " " + target_nick;
+	const std::map<std::string, int> &members = ch->getClients();
+	for (std::map<std::string, int>::const_iterator it = members.begin(); it != members.end(); ++it)
+		sendLine(it->second, kick_msg);
+	
+	ch->removeUser(target_fd);
+	std::cout << "Client fd: " << client_fd << " kicked " << target_nick << " from channel " << channel_name << std::endl;
 }
 
 void Server::HandleQuit(int client_fd)
@@ -443,6 +503,8 @@ void Server::ProcessCommand(int client_fd, const std::string &line)
 		HandlePrivMsg(client_fd, tokens);
 	else if (command == "TOPIC")
 		HandleTopic(client_fd, tokens);
+	else if (command == "KICK")
+		HandleKick(client_fd, tokens);
 	else if (command == "QUIT")
 		HandleQuit(client_fd);
 	else if (clients[client_index].getIsInChannel())

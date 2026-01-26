@@ -6,7 +6,7 @@
 /*   By: judith <judith@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 16:45:13 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/25 16:33:18 by judith           ###   ########.fr       */
+/*   Updated: 2026/01/26 17:39:51 by judith           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,8 @@ class Client
 		bool getPassAccepted() const; 
 		bool getIsRegistered() const;
 		bool getIsOperator() const;
+		int getClientfd(std::string &nick) const;
+	
 		void AppendToBuffer(const std::string &rec_buffer);
 		std::vector<std::string> ExtractCompleteCommands();
 

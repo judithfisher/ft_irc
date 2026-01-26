@@ -6,7 +6,7 @@
 /*   By: judith <judith@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 16:44:51 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/25 16:12:47 by judith           ###   ########.fr       */
+/*   Updated: 2026/01/26 17:35:07 by judith           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,6 +82,7 @@ class Server
     	void HandleJoin(int client_fd, const std::vector<std::string> &line);
     	void HandlePrivMsg(int client_fd, const std::vector<std::string> &line);
 		void HandleTopic(int client_fd, const std::vector<std::string> &line);
+		void HandleKick(int client_fd, const std::vector<std::string> &line);
     	void HandleQuit(int client_fd);
 		void SendMessage(int client_fd, const std::vector<std::string> &line);
 
