@@ -220,17 +220,6 @@ void Server::HandleJoin(int client_fd, const std::vector<std::string> &line)
 			return;
 		}
 	}
-	//this was previous but still did not wokr well with +i
-	// if (ch->isInviteOnly()) {
-	// 	if (ch->getUserCount() == 0) {
-	// 		// First user can always join (and becomes operator)
-	// 	} else if (!ch->isUserInvited(client_fd)) {
-	// 		sendLine(client_fd, "473 " + channel_name + " :Cannot join channel (+i)");
-	// 		return;
-	// 	}
-	// }
-	/* +k (key)
-	if password is set then it needs to provide it (its requierd) */
 	if (ch->hasPassword()) 
 	{
 		if (line.size() < 3 || line[2] != ch->getPassword()) 
@@ -534,6 +523,7 @@ void Server::HandleMode(int client_fd, const std::vector<std::string> &line)
 	std::string modeStr = line[2];
 	bool adding = true;
 	size_t paramIndex = 3;
+	bool modeChanged = false;		/* to print message only when mode is correctly used, not every time  it tries */
 	for (size_t i = 0; i < modeStr.size(); ++i) 
 	{
 		char mode = modeStr[i];
@@ -542,20 +532,32 @@ void Server::HandleMode(int client_fd, const std::vector<std::string> &line)
 		else if (mode == '-')
 			adding = false;
 		else if (mode == 'i')
+		{
 			channel->setInviteOnly(adding);
+			modeChanged = true;
+		}
 		else if (mode == 't')
+		{
 			channel->setTopicRestricted(adding);
+			modeChanged = true;
+		}
 		else if (mode == 'k') 
 		{
 			if (adding) 
 			{
 				if (line.size() > paramIndex)
+				{
 					channel->setPassword(line[paramIndex++]);
+					modeChanged = true;
+				}
 				else
 					sendLine(client_fd, ":server 461 MODE :Not enough parameters for +k");
 			}
 			else
+			{
 				channel->removePassword();
+				modeChanged = true;
+			}
 		} 
 		else if (mode == 'o') 
 		{
@@ -578,6 +580,7 @@ void Server::HandleMode(int client_fd, const std::vector<std::string> &line)
 						channel->addOperator(targetFd);
 					else
 						channel->removeOperator(targetFd);
+					modeChanged = true;
 				}
 			}
 			else
@@ -591,16 +594,29 @@ void Server::HandleMode(int client_fd, const std::vector<std::string> &line)
 				{
 					int limit = atoi(line[paramIndex++].c_str());
 					channel->setUserLimit(limit);
+					modeChanged = true;
 				} 
 				else
 					sendLine(client_fd, ":server 461 MODE :Not enough parameters for +l");
 			}
 			else
+			{
 				channel->removeUserLimit();
+				modeChanged = true;
+			}
 		}
 		else
 			sendLine(client_fd, ":server 472 " + std::string(1, mode) + " :is unknown mode char to me");
     }
+	if(modeChanged)
+	{
+		std::string nick = clients[clientIndex].getNickname();
+		std::string user = clients[clientIndex].getUsername();
+		if(user.empty())
+			user = "user";
+		std::string modeMsg = ":" + nick + "!" + user + "@host MODE " + channelName + " " + modeStr;
+		channel->broadcast(modeMsg);
+	}
 }
 
 void Server::SendMessage(int client_fd, const std::vector<std::string> &line)
@@ -656,7 +672,9 @@ void Server::ProcessCommand(int client_fd, const std::string &line)
 	else if (command == "NICK")
 		HandleNick(client_fd, tokens);
 	else if (command == "USER")
-		HandleUser(client_fd, tokens);
+	HandleUser(client_fd, tokens);
+	else if (command == "MODE")
+		HandleMode(client_fd, tokens);
 	else if (command == "JOIN")
 		HandleJoin(client_fd, tokens);
 	else if (command == "PRIVMSG")
@@ -669,8 +687,6 @@ void Server::ProcessCommand(int client_fd, const std::string &line)
 		HandleQuit(client_fd);
 	else if (clients[client_index].getIsInChannel())
 		SendMessage(client_fd, tokens);
-	else if (command == "MODE")
-    	HandleMode(client_fd, tokens);
 	else
 	{
 		std::cout << "Unknown command: " << command << std::endl;

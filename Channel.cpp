@@ -70,13 +70,13 @@ void Channel::removeUser(int client_fd)
 		}
 	}
 
-	/* check are users in channel still and is there no operator 
+	/* check are users still in channel and is there no operator 
 	then we need to sign up new one which will be first element of vector of users*/
 	if (!users.empty() && operators.empty()) 
 	{
 		int new_oper = users[0];
 		addOperator(new_oper);
-		broadcast("New channel operator assigned"); /* Does it have to be specified who necame operator? */
+		broadcast("New channel operator assigned"); /* Does it have to be specified who new became an operator? */
 	}
 }
 
