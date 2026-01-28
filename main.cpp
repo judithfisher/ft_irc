@@ -11,11 +11,8 @@
 /* ************************************************************************** */
 
 #include "Server.hpp"
-#include "Client.hpp"
 #include "checkers.hpp"
-#include <string>
 #include <iostream>
-#include <sstream>
 
 bool Server::SignalReceived = false;
 
@@ -26,24 +23,14 @@ int main(int argc, char **argv)
 	signal(SIGINT, Server::SignalHandler);
 	signal(SIGTERM, Server::SignalHandler);
 
-	try //if gonna use try catch here needs to be main init
+	try
 	{
-
 		check(argc, argv);
 		server.setport(std::atoi(argv[1]));
 		server.setpassword(argv[2]);
 		server.InitServerSocket();
 		server.RunServer();
-		// while (!Server::SignalReceived)
-		// {
-		// 	server.AcceptClients();
-		// 	// if (server.getClientvector().size() == 100)
-		// 	// {
-		// 	// 	break;
-		// 	// }		
-		// }
 	}
-	
 	catch (const std::exception &e)
 	{
 		std::cout << e.what() << std::endl;
