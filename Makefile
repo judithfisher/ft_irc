@@ -13,7 +13,8 @@
 NAME = ft_irc
 
 CXX = c++
-FLAGS = -Wall -Wextra -Werror -std=c++98
+FLAGS = -Wall -Wextra -Werror -std=c++98 -g 
+# -g for valgrind lines showing
 
 
 SRCS = 	Client.cpp \

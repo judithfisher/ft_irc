@@ -170,12 +170,12 @@ void Server::HandleJoin(int client_fd, const std::vector<std::string> &line)
 	if (client_index < 0)
 		return;
 
-	if (!clients[client_index].getIsRegistered())
-	{
-		// 451: ERR_NOTREGISTERED
-		sendLine(client_fd, "451 :You have not registered");
-		return;
-	}
+	// if (!clients[client_index].getIsRegistered())
+	// {
+	// 	// 451: ERR_NOTREGISTERED
+	// 	sendLine(client_fd, "451 :You have not registered");
+	// 	return;
+	// }
 
 	if (line.size() < 2)
 	{
@@ -418,6 +418,59 @@ void Server::HandleTopic(int client_fd, const std::vector<std::string> &line)
 	std::cout << "Client fd: " << client_fd << " set TOPIC for channel " << line[1] << " to: " << topic << std::endl;
 }
 
+void Server::HandleInvite(int client_fd, const std::vector<std::string> &line)
+{
+	if (line.size() < 3)
+	{
+		sendLine(client_fd, "461 INVITE :Not enough parameters");
+		return ;
+	}
+	int client_index = findClientbyFd(client_fd);
+	if (client_index < 0)	
+		return ;
+
+	// if (clients[client_index].getIsRegistered() == false)
+	// {
+	// 	sendLine(client_fd, "451 :You have not registered");
+	// 	return ;
+	// }
+	
+	if (clients[client_index].getIsInChannel() == false)
+	{
+		sendLine(client_fd, "442 :You're not on that channel");
+		return ;
+	}
+	
+	std::string channel_name = line[2];
+	Channel *ch = getChannel(channel_name);
+	if (!ch)
+		return ;
+	
+	if (!ch->isOperator(client_fd))
+	{
+		sendLine(client_fd, "482 :You're not channel operator");
+		return ;
+	}
+	std::string target_nick = line[1];
+	int target_fd = -1;
+	for (size_t i = 0; i < clients.size(); i++)
+	{
+		if (clients[i].getNickname() == target_nick)
+		{
+			target_fd = clients[i].getFd();
+			break ;
+		}
+	}
+	if (target_fd == -1)
+	{
+		sendLine(client_fd, "401 " + target_nick + " :No such nick/channel");
+		return ;
+	}
+	ch->addUser(target_fd, target_nick);
+	sendLine(target_fd, ":" + clients[client_index].getNickname() + "!" + clients[client_index].getUsername() + "@host INVITE " + target_nick + " " + channel_name);
+	std::cout << "Client fd: " << client_fd << " invited " << target_nick << " to channel " << channel_name << std::endl;
+}
+
 void Server::HandleKick(int client_fd, const std::vector<std::string> &line)
 {
 	if (line.size() < 3)
@@ -429,11 +482,11 @@ void Server::HandleKick(int client_fd, const std::vector<std::string> &line)
 	if (client_index < 0)	
 		return ;
 
-	if (clients[client_index].getIsRegistered() == false)
-	{
-		sendLine(client_fd, "451 :You have not registered");
-		return ;
-	}
+	// if (clients[client_index].getIsRegistered() == false)
+	// {
+	// 	sendLine(client_fd, "451 :You have not registered");
+	// 	return ;
+	// }
 	
 	if (clients[client_index].getIsInChannel() == false)
 	{
@@ -673,23 +726,37 @@ void Server::ProcessCommand(int client_fd, const std::string &line)
 		HandleNick(client_fd, tokens);
 	else if (command == "USER")
 	HandleUser(client_fd, tokens);
-	else if (command == "MODE")
-		HandleMode(client_fd, tokens);
-	else if (command == "JOIN")
-		HandleJoin(client_fd, tokens);
-	else if (command == "PRIVMSG")
-		HandlePrivMsg(client_fd, tokens);
-	else if (command == "TOPIC")
-		HandleTopic(client_fd, tokens);
-	else if (command == "KICK")
-		HandleKick(client_fd, tokens);
-	else if (command == "QUIT")
-		HandleQuit(client_fd);
-	else if (clients[client_index].getIsInChannel())
-		SendMessage(client_fd, tokens);
-	else
+	/* one check for all Commands */
+	else if(clients[client_index].getIsRegistered() == true)
 	{
-		std::cout << "Unknown command: " << command << std::endl;
+		std::cout << "ENTERING COMMANDS BLOCK" << std::endl;
+		if (command == "MODE")
+			HandleMode(client_fd, tokens);
+		else if (command == "JOIN")
+			HandleJoin(client_fd, tokens);
+		else if (command == "PRIVMSG")
+			HandlePrivMsg(client_fd, tokens);
+		else if (command == "TOPIC")
+			HandleTopic(client_fd, tokens);
+		else if (command == "INVITE")
+			HandleInvite(client_fd, tokens);
+		else if (command == "KICK")
+			HandleKick(client_fd, tokens);
+		else if (command == "QUIT")
+			HandleQuit(client_fd);
+		else if (clients[client_index].getIsInChannel())
+			SendMessage(client_fd, tokens);
+		else
+		{
+			std::cout << "Unknown command: " << command << std::endl;
+			return;
+		}
+	}
+	else if(!(clients[client_index].getIsRegistered()) && command != "USER" && command != "NICK" && command != "PASS")/* if nto registered cannot use any command */
+	{
+		std::cout << RED "Prohibited usage!" R YEL "Client nickname: " << clients[client_index].getNickname() << ". Tried to use command: " << command << ", but is not registered yet." R << std::endl;
+		sendLine(client_fd, "451 :You have not registered");
+		return;
 	}
 }
 

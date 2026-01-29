@@ -82,6 +82,7 @@ class Server
     	void HandleJoin(int client_fd, const std::vector<std::string> &line);
     	void HandlePrivMsg(int client_fd, const std::vector<std::string> &line);
 		void HandleTopic(int client_fd, const std::vector<std::string> &line);
+		void HandleInvite(int client_fd, const std::vector<std::string> &line);
 		void HandleKick(int client_fd, const std::vector<std::string> &line);
     	void HandleQuit(int client_fd);
 		void SendMessage(int client_fd, const std::vector<std::string> &line);
@@ -127,8 +128,10 @@ class Server
 			const char *what() const throw();
 		};
 
-	//MODE
+	/* MODE */
 	void HandleMode(int client_fd, const std::vector<std::string> &line);
+	/* INVITE */
+
 		
 	
 };
