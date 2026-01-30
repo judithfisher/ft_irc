@@ -76,16 +76,16 @@ class Server
 		
 		std::vector<std::string> ParseCommand(const std::string &line);
 		void ProcessCommand(int client_fd, const std::string& line);
-		void HandlePass(int client_fd, const std::vector<std::string> &line);
-    	void HandleNick(int client_fd, const std::vector<std::string> &line);
-    	void HandleUser(int client_fd, const std::vector<std::string> &line);
-    	void HandleJoin(int client_fd, const std::vector<std::string> &line);
-    	void HandlePrivMsg(int client_fd, const std::vector<std::string> &line);
-		void HandleTopic(int client_fd, const std::vector<std::string> &line);
-		void HandleInvite(int client_fd, const std::vector<std::string> &line);
-		void HandleKick(int client_fd, const std::vector<std::string> &line);
-    	void HandleQuit(int client_fd);
-		void SendMessage(int client_fd, const std::vector<std::string> &line);
+		void HandlePass(int client_fd, const std::vector<std::string> &line, int client_index);
+    	void HandleNick(int client_fd, const std::vector<std::string> &line, int client_index);
+    	void HandleUser(int client_fd, const std::vector<std::string> &line, int client_index);
+    	void HandleJoin(int client_fd, const std::vector<std::string> &line, int client_index);
+    	void HandlePrivMsg(int client_fd, const std::vector<std::string> &line, int client_index);
+		void HandleTopic(int client_fd, const std::vector<std::string> &line, int client_index);
+		void HandleInvite(int client_fd, const std::vector<std::string> &line, int client_index);
+		void HandleKick(int client_fd, const std::vector<std::string> &line, int client_index);
+    	void HandleQuit(int client_fd, int client_index);
+		void SendMessage(int client_fd, const std::vector<std::string> &line, int client_index);
 
 		void RemoveClient(int client_fd);
 		void ClearClients();
@@ -129,7 +129,7 @@ class Server
 		};
 
 	/* MODE */
-	void HandleMode(int client_fd, const std::vector<std::string> &line);
+	void HandleMode(int client_fd, const std::vector<std::string> &line, int client_index);
 	/* INVITE */
 
 		

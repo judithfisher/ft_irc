@@ -79,20 +79,35 @@ void Server::Greeting(int client_fd)
 	sendLine(client_fd, "\033[1;35mNOTICE * :USER <username> 0 * :realname");
 }
 
-void Server::HandlePass(int client_fd, const std::vector<std::string> &line)
+void Server::HandlePass(int client_fd, const std::vector<std::string> &line, int client_index)
 {
-	int client_index = findClientbyFd(client_fd);
-	if (client_index < 0)
-		return;
+	// int client_index = findClientbyFd(client_fd);
+	// if (client_index < 0)
+	// 	return;
 	if (line.size() < 2)
 	{
 		std::cerr << "Client fd: " << client_fd << " sent PASS without parameter." << std::endl;
+		sendLine(client_fd, RED ":server 461 * PASS :Not enough parameters" R);
 		return;
 	}
 	std::string pass = line[1];
 	if (pass.empty())
 	{
 		std::cerr << "Client fd: " << client_fd << " provided empty password." << std::endl;
+		sendLine(client_fd, RED ":server 464 * :Password incorrect" R);
+		return;
+	}
+	if(clients[client_index].getIsRegistered())/* does not allow to use PASS after registration */
+	{
+		std::cout << GRN "Client is already registered with nick, user and password" R << std::endl;
+		sendLine(client_fd, ":server 462 " + clients[client_index].getNickname() + ":You may not reregister");
+		return;
+	}
+	if((!clients[client_index].getIsRegistered()) && clients[client_index].getPassAccepted())/* if pass set but not registered  PASS should not try to match passwords anymore*/
+	{
+		/* according to hexchat logic of settign username and nickname right away do we even need this check? */
+		std::cout << GRN "Client already registered the password" R << std::endl;
+		sendLine(client_fd, ":server 462 " + clients[client_index].getNickname() + ":You may not reregister");
 		return;
 	}
 	if (pass == this->password)
@@ -101,17 +116,23 @@ void Server::HandlePass(int client_fd, const std::vector<std::string> &line)
 		std::cout << "Client fd: " << client_fd << " provided correct password." << std::endl;
 	}
 	else
+	{
 		std::cout << "Client fd: " << client_fd << " provided incorrect password." << std::endl;
+		sendLine(client_fd, ":server 464 * :Password incorrect");
+		return;
+	}
+
 }
 
-void Server::HandleNick(int client_fd, const std::vector<std::string> &line)
+void Server::HandleNick(int client_fd, const std::vector<std::string> &line, int client_index)
 {
-	int client_index = findClientbyFd(client_fd);
-	if (client_index < 0)
-		return;
+	// int client_index = findClientbyFd(client_fd);
+	// if (client_index < 0)
+	// 	return;
 	if (line.size() < 2)
 	{
 		std::cerr << "Client fd: " << client_fd << " sent NICK without parameter." << std::endl;
+		sendLine(client_fd, RED "431 :No nickname given" R);
 		return;
 	}
 	std::string nickname = line[1];
@@ -122,27 +143,42 @@ void Server::HandleNick(int client_fd, const std::vector<std::string> &line)
 			if (clients[i].getNickname() == nickname)
 			{
 				std::cerr << "Client fd: " << client_fd << " attempted to set duplicate nickname: " << nickname << std::endl;
+				sendLine(client_fd, "433 " + nickname + " :Nickname is already in use");
+				return;
+			}
+		}
+		if(nickname[0] == '#' || nickname[0] == '&' || nickname[0] == ':' || isdigit(nickname[0]))
+		{	
+			/* friday added check */
+			std::cout << RED "invalid nick: starts from prohibited character." R<< std::endl;
+			sendLine(client_fd, RED "432 " +nickname + " :Erroneous nickname" R);
+			return;
+		}
+		for(size_t i = 0; i < nickname.size(); i++)
+		{
+			/* friday added check */
+			if((nickname[i] == ' ') || isascii(nickname[i]))
+			{
+				std::cout << RED "invalid nick: space or non ascii char." R << std::endl;
+				sendLine(client_fd, RED "432 " +nickname + " :Erroneous nickname" R);
 				return;
 			}
 		}
 		clients[client_index].setNickname(nickname);
 		std::cout << "Client fd: " << client_fd << " set nickname to: " << nickname << std::endl;
-		if (clients[client_index].getNickname().size() != 0
-			&& clients[client_index].getUsername().size() != 0)
-		{
+		if (clients[client_index].getNickname().size() != 0 && clients[client_index].getUsername().size() != 0)
 			clients[client_index].setRegistered();
-		}
 	}
 	else
 		std::cerr << "Client fd: " << client_fd
 			<< " attempted to set nickname without passing authentication." << std::endl;
 }
 
-void Server::HandleUser(int client_fd, const std::vector<std::string> &line)
+void Server::HandleUser(int client_fd, const std::vector<std::string> &line, int client_index)
 {
-	int client_index = findClientbyFd(client_fd);
-	if (client_index < 0)
-		return;
+	// int client_index = findClientbyFd(client_fd);
+	// if (client_index < 0)
+	// 	return;
 	if (line.size() < 2)
 	{
 		std::cerr << "Client fd: " << client_fd << " sent USER without parameter." << std::endl;
@@ -164,11 +200,11 @@ void Server::HandleUser(int client_fd, const std::vector<std::string> &line)
 			<< " attempted to set username without passing authentication." << std::endl;
 }
 
-void Server::HandleJoin(int client_fd, const std::vector<std::string> &line)
+void Server::HandleJoin(int client_fd, const std::vector<std::string> &line, int client_index)
 {
-	int client_index = findClientbyFd(client_fd);
-	if (client_index < 0)
-		return;
+	// int client_index = findClientbyFd(client_fd);
+	// if (client_index < 0)
+	// 	return;
 
 	// if (!clients[client_index].getIsRegistered())
 	// {
@@ -284,11 +320,11 @@ void Server::HandleJoin(int client_fd, const std::vector<std::string> &line)
 	std::cout << "Client " << nick << " joined " << channel_name << std::endl;
 }
 
-void Server::HandlePrivMsg(int client_fd, const std::vector<std::string> &line)
+void Server::HandlePrivMsg(int client_fd, const std::vector<std::string> &line, int client_index)
 {
-	int client_index = findClientbyFd(client_fd);
-	if (client_index < 0)
-		return;
+	// int client_index = findClientbyFd(client_fd);
+	// if (client_index < 0)
+	// 	return;
 	if (line.size() < 2)
 	{
 		// 411: ERR_NORECIPIENT
@@ -360,11 +396,11 @@ void Server::HandlePrivMsg(int client_fd, const std::vector<std::string> &line)
 	sendLine(client_fd, "401 " + target + " :No such nick/channel");												// otherwise, no channel nor user found
 }
 
-void Server::HandleTopic(int client_fd, const std::vector<std::string> &line)
+void Server::HandleTopic(int client_fd, const std::vector<std::string> &line, int client_index)
 {
-	int client_index = findClientbyFd(client_fd);
-	if (client_index < 0)
-		return ;
+	// int client_index = findClientbyFd(client_fd);
+	// if (client_index < 0)
+	// 	return ;
 		
 	if (line.size() < 2)
 	{
@@ -418,16 +454,16 @@ void Server::HandleTopic(int client_fd, const std::vector<std::string> &line)
 	std::cout << "Client fd: " << client_fd << " set TOPIC for channel " << line[1] << " to: " << topic << std::endl;
 }
 
-void Server::HandleInvite(int client_fd, const std::vector<std::string> &line)
+void Server::HandleInvite(int client_fd, const std::vector<std::string> &line, int client_index)
 {
 	if (line.size() < 3)
 	{
 		sendLine(client_fd, "461 INVITE :Not enough parameters");
 		return ;
 	}
-	int client_index = findClientbyFd(client_fd);
-	if (client_index < 0)	
-		return ;
+	// int client_index = findClientbyFd(client_fd);
+	// if (client_index < 0)	
+	// 	return ;
 
 	// if (clients[client_index].getIsRegistered() == false)
 	// {
@@ -471,16 +507,16 @@ void Server::HandleInvite(int client_fd, const std::vector<std::string> &line)
 	std::cout << "Client fd: " << client_fd << " invited " << target_nick << " to channel " << channel_name << std::endl;
 }
 
-void Server::HandleKick(int client_fd, const std::vector<std::string> &line)
+void Server::HandleKick(int client_fd, const std::vector<std::string> &line, int client_index)
 {
 	if (line.size() < 3)
 	{
 		sendLine(client_fd, "461 KICK :Not enough parameters");
 		return ;
 	}
-	int client_index = findClientbyFd(client_fd);
-	if (client_index < 0)	
-		return ;
+	// int client_index = findClientbyFd(client_fd);
+	// if (client_index < 0)	
+	// 	return ;
 
 	// if (clients[client_index].getIsRegistered() == false)
 	// {
@@ -529,15 +565,17 @@ void Server::HandleKick(int client_fd, const std::vector<std::string> &line)
 	std::cout << "Client fd: " << client_fd << " kicked " << target_nick << " from channel " << channel_name << std::endl;
 }
 
-void Server::HandleQuit(int client_fd)
+void Server::HandleQuit(int client_fd, int client_index)
 {
+	(void)client_index;
 	std::cout << "Client fd: " << client_fd << " is quitting." << std::endl;
 	sendLine(client_fd, "\033[2J\033[H");  // Clear screen
+	// checker needs to go here if user in channel, for loop to erase user from channel
 	RemoveClient(client_fd);
 }
 
 //MODE
-void Server::HandleMode(int client_fd, const std::vector<std::string> &line)
+void Server::HandleMode(int client_fd, const std::vector<std::string> &line, int client_index)
 {
 	if (line.size() < 2) 
 	{
@@ -551,9 +589,9 @@ void Server::HandleMode(int client_fd, const std::vector<std::string> &line)
 		sendLine(client_fd, ":server 403 " + channelName + " :No such channel");
 		return;
 	}
-	int clientIndex = findClientbyFd(client_fd);
-	if (clientIndex == -1) 
-		return;
+	// int clientIndex = findClientbyFd(client_fd);
+	// if (clientIndex == -1) 
+	// 	return;
 	if (!channel->isOperator(client_fd)) 
 	{
 		sendLine(client_fd, ":server 482 " + channelName + " :You're not channel operator");
@@ -663,8 +701,8 @@ void Server::HandleMode(int client_fd, const std::vector<std::string> &line)
     }
 	if(modeChanged)
 	{
-		std::string nick = clients[clientIndex].getNickname();
-		std::string user = clients[clientIndex].getUsername();
+		std::string nick = clients[client_index].getNickname();
+		std::string user = clients[client_index].getUsername();
 		if(user.empty())
 			user = "user";
 		std::string modeMsg = ":" + nick + "!" + user + "@host MODE " + channelName + " " + modeStr;
@@ -672,11 +710,11 @@ void Server::HandleMode(int client_fd, const std::vector<std::string> &line)
 	}
 }
 
-void Server::SendMessage(int client_fd, const std::vector<std::string> &line)
+void Server::SendMessage(int client_fd, const std::vector<std::string> &line, int client_index)
 {
-	int client_index = findClientbyFd(client_fd);
-	if (client_index < 0)
-		return;
+	// int client_index = findClientbyFd(client_fd);
+	// if (client_index < 0)
+	// 	return;
 	if (clients[client_index].getIsInChannel() == true)
 	{
 		for (size_t i = 1; i < line.size(); i++)
@@ -711,7 +749,8 @@ void Server::ProcessCommand(int client_fd, const std::string &line)
 
 	if (command == "CAP")
 	{
-		sendLine(client_fd, "CAP * LS :");
+		sendLine(client_fd, "CAP * LS :"); //hexchat
+		// sendLine(client_fd, ":server CAP * LS :multi-prefix"); //irssi
 	}
 	else if (command == "PING")
 	{
@@ -721,31 +760,31 @@ void Server::ProcessCommand(int client_fd, const std::string &line)
 			sendLine(client_fd, "PONG ircserv");
 	}
 	else if (command == "PASS")
-		HandlePass(client_fd, tokens);
+		HandlePass(client_fd, tokens, client_index);
 	else if (command == "NICK")
-		HandleNick(client_fd, tokens);
+		HandleNick(client_fd, tokens, client_index);
 	else if (command == "USER")
-	HandleUser(client_fd, tokens);
+		HandleUser(client_fd, tokens, client_index);
+	else if (command == "QUIT")
+		HandleQuit(client_fd, client_index);
 	/* one check for all Commands */
 	else if(clients[client_index].getIsRegistered() == true)
 	{
 		std::cout << "ENTERING COMMANDS BLOCK" << std::endl;
 		if (command == "MODE")
-			HandleMode(client_fd, tokens);
+			HandleMode(client_fd, tokens, client_index);
 		else if (command == "JOIN")
-			HandleJoin(client_fd, tokens);
+			HandleJoin(client_fd, tokens, client_index);
 		else if (command == "PRIVMSG")
-			HandlePrivMsg(client_fd, tokens);
+			HandlePrivMsg(client_fd, tokens, client_index);
 		else if (command == "TOPIC")
-			HandleTopic(client_fd, tokens);
+			HandleTopic(client_fd, tokens, client_index);
 		else if (command == "INVITE")
-			HandleInvite(client_fd, tokens);
+			HandleInvite(client_fd, tokens, client_index);
 		else if (command == "KICK")
-			HandleKick(client_fd, tokens);
-		else if (command == "QUIT")
-			HandleQuit(client_fd);
+			HandleKick(client_fd, tokens, client_index);
 		else if (clients[client_index].getIsInChannel())
-			SendMessage(client_fd, tokens);
+			SendMessage(client_fd, tokens, client_index);
 		else
 		{
 			std::cout << "Unknown command: " << command << std::endl;
