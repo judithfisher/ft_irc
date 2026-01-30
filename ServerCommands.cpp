@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServerCommands.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: judith <judith@student.42.fr>              +#+  +:+       +#+        */
+/*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/24 18:05:00 by codex             #+#    #+#             */
-/*   Updated: 2026/01/26 18:06:18 by judith           ###   ########.fr       */
+/*   Updated: 2026/01/30 21:55:17 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,7 +87,7 @@ void Server::HandlePass(int client_fd, const std::vector<std::string> &line, int
 	if (line.size() < 2)
 	{
 		std::cerr << "Client fd: " << client_fd << " sent PASS without parameter." << std::endl;
-		sendLine(client_fd, RED ":server 461 * PASS :Not enough parameters" R);
+		sendLine(client_fd, ":server 461 * PASS :Not enough parameters");
 		return;
 	}
 	std::string pass = line[1];
@@ -132,7 +132,7 @@ void Server::HandleNick(int client_fd, const std::vector<std::string> &line, int
 	if (line.size() < 2)
 	{
 		std::cerr << "Client fd: " << client_fd << " sent NICK without parameter." << std::endl;
-		sendLine(client_fd, RED "431 :No nickname given" R);
+		sendLine(client_fd, "431 :No nickname given");
 		return;
 	}
 	std::string nickname = line[1];
@@ -151,23 +151,27 @@ void Server::HandleNick(int client_fd, const std::vector<std::string> &line, int
 		{	
 			/* friday added check */
 			std::cout << RED "invalid nick: starts from prohibited character." R<< std::endl;
-			sendLine(client_fd, RED "432 " +nickname + " :Erroneous nickname" R);
+			sendLine(client_fd, "432 " +nickname + " :Erroneous nickname");
 			return;
 		}
 		for(size_t i = 0; i < nickname.size(); i++)
 		{
 			/* friday added check */
-			if((nickname[i] == ' ') || isascii(nickname[i]))
+			if((nickname[i] == ' ') || (!isascii(nickname[i])))
 			{
 				std::cout << RED "invalid nick: space or non ascii char." R << std::endl;
-				sendLine(client_fd, RED "432 " +nickname + " :Erroneous nickname" R);
+				sendLine(client_fd, "432 " +nickname + " :Erroneous nickname");
 				return;
 			}
 		}
 		clients[client_index].setNickname(nickname);
 		std::cout << "Client fd: " << client_fd << " set nickname to: " << nickname << std::endl;
 		if (clients[client_index].getNickname().size() != 0 && clients[client_index].getUsername().size() != 0)
+		{
 			clients[client_index].setRegistered();
+			/* server need to acknowledge registration by seeing somewhere 001 info: */
+			sendLine(client_fd, ":server 001 " + clients[client_index].getNickname() + " :Welcome to the ft_IRC server " + clients[client_index]. getNickname());
+		}
 	}
 	else
 		std::cerr << "Client fd: " << client_fd
@@ -193,6 +197,7 @@ void Server::HandleUser(int client_fd, const std::vector<std::string> &line, int
 			&& clients[client_index].getUsername().size() != 0)
 		{
 			clients[client_index].setRegistered();
+			sendLine(client_fd, ":server 001 " + clients[client_index].getNickname() + " :Welcome to the ft_IRC server " + clients[client_index]. getNickname());
 		}
 	}
 	else
@@ -345,7 +350,7 @@ void Server::HandlePrivMsg(int client_fd, const std::vector<std::string> &line, 
 			message = line[i];
 			if (i > 2)
 				message = " " + message;
-			message = message + line[i];
+			//message = message + line[i];
 	}
 
 	std::string nick = clients[client_index].getNickname();
@@ -564,10 +569,10 @@ void Server::HandleKick(int client_fd, const std::vector<std::string> &line, int
 	ch->removeUser(target_fd);
 	std::cout << "Client fd: " << client_fd << " kicked " << target_nick << " from channel " << channel_name << std::endl;
 }
-
+/* IRS does not read ANSI code it will either ignore or send gibberish */
 void Server::HandleQuit(int client_fd, int client_index)
 {
-	(void)client_index;
+	(void)client_index; //change upon expanding code
 	std::cout << "Client fd: " << client_fd << " is quitting." << std::endl;
 	sendLine(client_fd, "\033[2J\033[H");  // Clear screen
 	// checker needs to go here if user in channel, for loop to erase user from channel
@@ -749,13 +754,18 @@ void Server::ProcessCommand(int client_fd, const std::string &line)
 
 	if (command == "CAP")
 	{
-		sendLine(client_fd, "CAP * LS :"); //hexchat
+		return; //ignoring 
+		/*sendLine(client_fd, "CAP * LS :"); //hexchat. 
+		^
+		 chat sais this is wrong bc this is client request 
+		not a server reply. It suggest to ignore or just sent "CAP * ACK :" */
+		
 		// sendLine(client_fd, ":server CAP * LS :multi-prefix"); //irssi
 	}
 	else if (command == "PING")
 	{
 		if (tokens.size() > 1)
-			sendLine(client_fd, "PONG ircserv :" + tokens[1]);
+			sendLine(client_fd, "PONG ircserv :" + tokens[1]); /* !!!!!!! tokens.back() !!!!!!also sends last token, safer than token[1] */
 		else
 			sendLine(client_fd, "PONG ircserv");
 	}
@@ -786,8 +796,10 @@ void Server::ProcessCommand(int client_fd, const std::string &line)
 		else if (clients[client_index].getIsInChannel())
 			SendMessage(client_fd, tokens, client_index);
 		else
-		{
+		{/* this should not be silent (requiers numeric info 421) 
+			so as i understand hexchat will send commands we dont support*/
 			std::cout << "Unknown command: " << command << std::endl;
+			sendLine(client_fd, "421 "+clients[client_index].getNickname() + " " + command + " :Unknown command");
 			return;
 		}
 	}

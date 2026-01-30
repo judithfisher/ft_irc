@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServerSocket.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: judith <judith@student.42.fr>              +#+  +:+       +#+        */
+/*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/24 18:05:00 by codex             #+#    #+#             */
-/*   Updated: 2026/01/24 18:05:00 by codex            ###   ########.fr       */
+/*   Updated: 2026/01/30 21:59:42 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,8 +86,6 @@ void Server::RunServer()
 				if (fds[i].fd == this->server_fd)
 				{
 					AcceptClients();
-					// AcceptClients can grow fds; increment avoids skipping the next entry.
-					i++;
 				}
 				else
 				{
@@ -157,10 +155,16 @@ void Server::ReceiveData(int client_fd)
 
 void Server::RemoveClient(int client_fd)
 {
+	int client_index = findClientbyFd(client_fd);
+	std::string nick = clients[client_index].getNickname();
+	std::string user = clients[client_index].getUsername();
 	// Ensure channel membership is cleaned up (fds get reused by the OS).
 	for (std::map<std::string, Channel>::iterator it = channels.begin();
 		it != channels.end();)
 	{
+		/* broadcast to everyone that client left + what he wrote */
+		it->second.broadcast(":" + nick + "!" + user + "@host QUIT :Client Quit");
+		
 		it->second.removeUser(client_fd);
 		it->second.removeOperator(client_fd);
 		if (it->second.getUserCount() == 0)
