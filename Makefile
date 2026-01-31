@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: judith <judith@student.42.fr>              +#+  +:+       +#+         #
+#    By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/01/09 15:25:05 by jfischer          #+#    #+#              #
-#    Updated: 2026/01/26 18:17:51 by judith           ###   ########.fr        #
+#    Updated: 2026/01/31 17:16:09 by jfischer         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -14,7 +14,6 @@ NAME = ft_irc
 
 CXX = c++
 FLAGS = -Wall -Wextra -Werror -std=c++98
-
 
 SRCS = 	Client.cpp \
 		checkers.cpp \

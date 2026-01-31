@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: judith <judith@student.42.fr>              +#+  +:+       +#+        */
+/*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 16:44:51 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/26 19:11:17 by judith           ###   ########.fr       */
+/*   Updated: 2026/01/31 18:23:14 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,6 +76,7 @@ class Server
 		
 		std::vector<std::string> ParseCommand(const std::string &line);
 		void ProcessCommand(int client_fd, const std::string& line);
+		void HandleWho(int client_fd, const std::vector<std::string> &line);
 		void HandlePass(int client_fd, const std::vector<std::string> &line);
     	void HandleNick(int client_fd, const std::vector<std::string> &line);
     	void HandleUser(int client_fd, const std::vector<std::string> &line);

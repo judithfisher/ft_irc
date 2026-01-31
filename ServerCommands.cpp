@@ -3,14 +3,38 @@
 /*                                                        :::      ::::::::   */
 /*   ServerCommands.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: judith <judith@student.42.fr>              +#+  +:+       +#+        */
+/*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/24 18:05:00 by codex             #+#    #+#             */
-/*   Updated: 2026/01/26 19:13:29 by judith           ###   ########.fr       */
+/*   Updated: 2026/01/31 21:03:15 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
+
+void Server::Greeting(int client_fd)
+{
+	sendLine(client_fd, "375 :- IRC SERVER 42 Message of the Day -");
+
+	sendLine(client_fd, " \033[1;35m░██████░█████████    ░██████       ░██████   ░██████████ ░█████████  ░██    ░██ ░██████████ ░█████████        ░████    ░██████");
+	sendLine(client_fd, "   ░██  ░██     ░██  ░██   ░██     ░██   ░██  ░██         ░██     ░██ ░██    ░██ ░██         ░██     ░██      ░██ ██   ░██   ░██");
+	sendLine(client_fd, "   ░██  ░██     ░██ ░██           ░██         ░██         ░██     ░██ ░██    ░██ ░██         ░██     ░██     ░██  ██         ░██");
+	sendLine(client_fd, "   ░██  ░█████████  ░██            ░████████  ░█████████  ░█████████  ░██    ░██ ░█████████  ░█████████     ░██   ██     ░█████");
+	sendLine(client_fd, "   ░██  ░██   ░██   ░██                   ░██ ░██         ░██   ░██    ░██  ░██  ░██         ░██   ░██      ░█████████  ░██");
+	sendLine(client_fd, "   ░██  ░██    ░██   ░██   ░██     ░██   ░██  ░██         ░██    ░██    ░██░██   ░██         ░██    ░██          ░██   ░██");
+	sendLine(client_fd, " ░██████░██     ░██   ░██████       ░██████   ░██████████ ░██     ░██    ░███    ░██████████ ░██     ░██         ░██   ░████████\033[0m");
+
+	sendLine(client_fd, " ");
+	sendLine(client_fd, "\033[1;35mNOTICE * :Welcome to IRC SERVER 42");
+	sendLine(client_fd, "\033[1;35mNOTICE * :Authentication required.");
+	sendLine(client_fd, "\033[1;35mNOTICE * :");
+	sendLine(client_fd, "\033[1;35mNOTICE * :Please authenticate first:");
+	sendLine(client_fd, "\033[1;35mNOTICE * :PASS <password>");
+	sendLine(client_fd, "\033[1;35mNOTICE * :");
+	sendLine(client_fd, "\033[1;35mNOTICE * :Then continue with:");
+	sendLine(client_fd, "\033[1;35mNOTICE * :NICK <nickname>");
+	sendLine(client_fd, "\033[1;35mNOTICE * :USER <username> 0 * :realname");
+}
 
 // IRC tokenization with support for the trailing parameter (after ':').
 // The trailing parameter can contain spaces (e.g. PRIVMSG #chan :hello world).
@@ -44,9 +68,7 @@ std::vector<std::string> Server::ParseCommand(const std::string &line)
 			}
 		}
 		else
-		{
 			current += c;
-		}
 	}
 
 	if (!current.empty())
@@ -55,28 +77,50 @@ std::vector<std::string> Server::ParseCommand(const std::string &line)
 	return tokens;
 }
 
-void Server::Greeting(int client_fd)
+void Server::HandleWho(int client_fd, const std::vector<std::string> &line)
 {
-	sendLine(client_fd, "375 :- IRC SERVER 42 Message of the Day -");
+	int client_index = findClientbyFd(client_fd);
+	if (client_index < 0 || clients[client_index].getIsRegistered() == false)
+		return;
+	if (line.size() < 2)
+	{
+		sendLine(client_fd, "461 WHO :Not enough parameters");
+		return;
+	}
+	std::string target = line[1];
+	std::string nick = clients[client_index].getNickname();
 
-	sendLine(client_fd, " \033[1;35m░██████░█████████    ░██████       ░██████   ░██████████ ░█████████  ░██    ░██ ░██████████ ░█████████        ░████    ░██████");
-	sendLine(client_fd, "   ░██  ░██     ░██  ░██   ░██     ░██   ░██  ░██         ░██     ░██ ░██    ░██ ░██         ░██     ░██      ░██ ██   ░██   ░██");
-	sendLine(client_fd, "   ░██  ░██     ░██ ░██           ░██         ░██         ░██     ░██ ░██    ░██ ░██         ░██     ░██     ░██  ██         ░██");
-	sendLine(client_fd, "   ░██  ░█████████  ░██            ░████████  ░█████████  ░█████████  ░██    ░██ ░█████████  ░█████████     ░██   ██     ░█████");
-	sendLine(client_fd, "   ░██  ░██   ░██   ░██                   ░██ ░██         ░██   ░██    ░██  ░██  ░██         ░██   ░██      ░█████████  ░██");
-	sendLine(client_fd, "   ░██  ░██    ░██   ░██   ░██     ░██   ░██  ░██         ░██    ░██    ░██░██   ░██         ░██    ░██          ░██   ░██");
-	sendLine(client_fd, " ░██████░██     ░██   ░██████       ░██████   ░██████████ ░██     ░██    ░███    ░██████████ ░██     ░██         ░██   ░████████\033[0m");
+	// WHO for channel
+	if (!target.empty() && target[0] == '#')
+	{
+		Channel *ch = getChannel(target);
+		if (!ch || !ch->isUserInChannel(client_fd))
+		{
+			sendLine(client_fd, ":ircserv 315 " + nick + " " + target + " :End of WHO list");
+			return;
+		}
 
-	sendLine(client_fd, " ");
-	sendLine(client_fd, "\033[1;35mNOTICE * :Welcome to IRC SERVER 42");
-	sendLine(client_fd, "\033[1;35mNOTICE * :Authentication required.");
-	sendLine(client_fd, "\033[1;35mNOTICE * :");
-	sendLine(client_fd, "\033[1;35mNOTICE * :Please authenticate first:");
-	sendLine(client_fd, "\033[1;35mNOTICE * :PASS <password>");
-	sendLine(client_fd, "\033[1;35mNOTICE * :");
-	sendLine(client_fd, "\033[1;35mNOTICE * :Then continue with:");
-	sendLine(client_fd, "\033[1;35mNOTICE * :NICK <nickname>");
-	sendLine(client_fd, "\033[1;35mNOTICE * :USER <username> 0 * :realname");
+		// Send WHO reply for each member
+		const std::map<std::string, int> &members = ch->getClients();
+		std::map<std::string, int>::const_iterator it;
+		for (it = members.begin(); it != members.end(); it++)
+		{ 
+			std::string member_nick = it->first;
+			int member_fd = it->second;
+			int member_index = findClientbyFd(member_fd);
+			if (member_index < 0)
+				continue;
+			std::string member_user = clients[member_index].getUsername();
+			
+			std::string flags = "H"; // Here, we assume all users are "here" and not away.
+			if (ch->isOperator(member_fd))
+				flags += "@";
+
+			std::string who_reply = ":ircserv 352 " + nick + " " + target + " " + member_user + " host " + "ircserv " + member_nick + " " + flags + " :0 Real Name";
+			sendLine(client_fd, who_reply);
+		}
+		sendLine(client_fd, ":ircserv 315 " + nick + " " + target + " :End of WHO list");
+	}
 }
 
 void Server::HandlePass(int client_fd, const std::vector<std::string> &line)
@@ -171,14 +215,12 @@ void Server::HandleJoin(int client_fd, const std::vector<std::string> &line)
 
 	if (!clients[client_index].getIsRegistered())
 	{
-		// 451: ERR_NOTREGISTERED
 		sendLine(client_fd, "451 :You have not registered");
 		return;
 	}
 
 	if (line.size() < 2)
 	{
-		// 461: ERR_NEEDMOREPARAMS
 		sendLine(client_fd, "461 JOIN :Not enough parameters");
 		return;
 	}
@@ -187,16 +229,12 @@ void Server::HandleJoin(int client_fd, const std::vector<std::string> &line)
 
 	if (channel_name.empty() || channel_name[0] != '#')
 	{
-		// 403: ERR_NOSUCHCHANNEL
 		sendLine(client_fd, "403 " + channel_name + " :No such channel");
 		return;
 	}
 
 	if (!channelExists(channel_name))
-	{
 		createChannel(channel_name);
-		clients[client_index].setIsOperator(true);
-	}
 		
 	Channel *ch = getChannel(channel_name);
 	if (!ch)
@@ -212,14 +250,16 @@ void Server::HandleJoin(int client_fd, const std::vector<std::string> &line)
 	ch->addUser(clients[client_index].getFd(), clients[client_index].getNickname());
 
 	if (ch->getUserCount() == 1)
+	{
 		ch->addOperator(client_fd);
-
+		clients[client_index].setIsOperator(true);
+		sendLine(client_fd, "You are now channel operator for " + channel_name);
+	}
+	
 	clients[client_index].setIsInChannel();
 
 	std::string nick = clients[client_index].getNickname();
 	std::string user = clients[client_index].getUsername();
-	if (user.empty())
-		user = "user";
 
 	// 1) Broadcast JOIN to all members
 	std::string joinMsg = ":" + nick + "!" + user + "@host JOIN " + channel_name;
@@ -227,21 +267,19 @@ void Server::HandleJoin(int client_fd, const std::vector<std::string> &line)
 	for (std::map<std::string, int>::const_iterator it = members.begin(); it != members.end(); ++it)
 		sendLine(it->second, joinMsg);
 
-	// 2) Topic (only to joining user)
-	// 331: RPL_NOTOPIC
-	sendLine(client_fd, "331 " + nick + " " + channel_name + " :No topic is set");
+	sendLine(client_fd, "331 " + nick + " " + channel_name + " :No topic is set");				// 331: RPL_NOTOPIC
 
 	// 3) Names list (only to joining user)
 	// 353: RPL_NAMREPLY
-	std::string names = "353 " + nick + " = " + channel_name + " :";
-	for (std::map<std::string, int>::const_iterator it = members.begin();
-		it != members.end(); ++it)
+	std::string names = ":ircserv 353 " + nick + " = " + channel_name + " :";
+	for (std::map<std::string, int>::const_iterator it = members.begin(); it != members.end(); ++it)
 	{
 		if (ch->isOperator(it->second))
 			names += "@";
 		names += it->first;
 		names += " ";
 	}
+	std::cout << "DEBUG: Sending Names: " << names << std::endl;	
 	sendLine(client_fd, names);
 
 	// 4) End of names
@@ -543,6 +581,8 @@ void Server::ProcessCommand(int client_fd, const std::string &line)
 		else
 			sendLine(client_fd, "PONG ircserv");
 	}
+	else if (command == "WHO")
+		HandleWho(client_fd, tokens);
 	else if (command == "PASS")
 		HandlePass(client_fd, tokens);
 	else if (command == "NICK")

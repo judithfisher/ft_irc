@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServerSocket.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: judith <judith@student.42.fr>              +#+  +:+       +#+        */
+/*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/24 18:05:00 by codex             #+#    #+#             */
-/*   Updated: 2026/01/24 18:05:00 by codex            ###   ########.fr       */
+/*   Updated: 2026/01/31 17:28:52 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,15 +84,9 @@ void Server::RunServer()
 			if (fds[i].revents & POLLIN)
 			{
 				if (fds[i].fd == this->server_fd)
-				{
 					AcceptClients();
-					// AcceptClients can grow fds; increment avoids skipping the next entry.
-					i++;
-				}
 				else
-				{
 					ReceiveData(fds[i].fd);
-				}
 			}
 
 			if (fds[i].revents & (POLLERR | POLLHUP | POLLNVAL))
@@ -120,8 +114,8 @@ void Server::AcceptClients()
 		NewPoll.revents = 0;
 		fds.push_back(NewPoll);
 		clients.push_back(Client(client_fd));
-		std::cout << "New client connected, client_fd: " << clients.back().getFd()
-			<<  " total clients: " << clients.size() << std::endl;
+		std::cout << "New client connected, client_fd: " << clients.back().getFd() <<  " total clients: " << clients.size() << std::endl;
+		Greeting(client_fd);
 	}
 }
 
