@@ -6,14 +6,16 @@
 #    By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/01/09 15:25:05 by jfischer          #+#    #+#              #
-#    Updated: 2026/01/31 17:16:09 by jfischer         ###   ########.fr        #
+#    Updated: 2026/01/31 23:34:46 by jfischer         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = ft_irc
 
 CXX = c++
-FLAGS = -Wall -Wextra -Werror -std=c++98
+FLAGS = -Wall -Wextra -Werror -std=c++98 -g 
+# -g for valgrind lines showing
+
 
 SRCS = 	Client.cpp \
 		checkers.cpp \

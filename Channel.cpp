@@ -69,6 +69,15 @@ void Channel::removeUser(int client_fd)
 			break;
 		}
 	}
+
+	/* check are users still in channel and is there no operator 
+	then we need to sign up new one which will be first element of vector of users*/
+	if (!users.empty() && operators.empty()) 
+	{
+		int new_oper = users[0];
+		addOperator(new_oper);
+		broadcast("New channel operator assigned"); /* Does it have to be specified who new became an operator? */
+	}
 }
 
 void Channel::addOperator(int client_fd)
@@ -149,4 +158,69 @@ void Channel::setTopic(const std::string &newTopic)
 void Channel::setTopicRestricted(bool topicRestricted)
 {
 	this->topicRestricted = topicRestricted;
+}
+
+//MODE
+
+void Channel::setInviteOnly(bool inviteOnly) 
+{
+	// std::cout << "[DEBUG] setInviteOnly called with: " << inviteOnly << std::endl;
+	this->inviteOnly = inviteOnly;
+}
+
+bool Channel::isInviteOnly() const 
+{
+	// std::cout << "[DEBUG] isInviteOnly returns: " << this->inviteOnly << std::endl;
+	return this->inviteOnly;
+}
+
+void Channel::setPassword(const std::string &password) 
+{ 
+    this->password = password; 
+}
+
+void Channel::removePassword() 
+{ 
+	this->password.clear(); 
+}
+
+bool Channel::hasPassword() const 
+{ 
+	return !this->password.empty(); 
+}
+
+std::string Channel::getPassword() const 
+{ 
+	return this->password; 
+}
+
+void Channel::setUserLimit(int limit) 
+{ 
+	this->userLimit = limit; 
+}
+
+void Channel::removeUserLimit() 
+{ 
+	this->userLimit = 0; 
+}
+
+int Channel::getUserLimit() const 
+{ 
+	return this->userLimit; 
+}
+
+void Channel::addInvitedUser(int client_fd) 
+{
+    for (size_t i = 0; i < invitedUsers.size(); i++)
+        if (invitedUsers[i] == client_fd)
+            return;
+    invitedUsers.push_back(client_fd);
+}
+
+bool Channel::isUserInvited(int client_fd) const 
+{
+    for (size_t i = 0; i < invitedUsers.size(); i++)
+        if (invitedUsers[i] == client_fd)
+            return true;
+    return false;
 }

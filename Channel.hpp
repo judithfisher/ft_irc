@@ -30,12 +30,20 @@ class Channel
 		bool getTopicRestricted() const;
 
 		void setTopic(const std::string &newTopic);
-		void setPassword(const std::string &newPassword);
 		void setInviteOnly(bool inviteOnly);
 		void setTopicRestricted(bool topicRestricted);
 		void setUserLimit(int limit);
 		void broadcast(const std::string &msg);
 		const std::map<std::string, int> &getClients() const;
+
+		//MODE
+		void setPassword(const std::string &password);
+		void removePassword();
+		bool hasPassword() const;
+		std::string getPassword() const;
+		void removeUserLimit();
+		int getUserLimit() const;
+		bool isInviteOnly() const;
 
 	private:
 		std::map<std::string, int> channel_clients;

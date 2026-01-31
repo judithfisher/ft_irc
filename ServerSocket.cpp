@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/24 18:05:00 by codex             #+#    #+#             */
-/*   Updated: 2026/01/31 17:28:52 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/01/31 21:22:27 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -151,10 +151,16 @@ void Server::ReceiveData(int client_fd)
 
 void Server::RemoveClient(int client_fd)
 {
-	// Ensure channel membership is cleaned up (fds get reused by the OS).
-	for (std::map<std::string, Channel>::iterator it = channels.begin();
-		it != channels.end();)
+	int client_index = findClientbyFd(client_fd);
+	std::string nick = clients[client_index].getNickname();
+	std::string user = clients[client_index].getUsername();
+
+	// Ensure channel membership is cleaned up (fds get reused by the OS)
+	std::map<std::string, Channel>::iterator it;
+	for (it = channels.begin(); it != channels.end(); it++)
 	{
+		/* broadcast to everyone that client left + what he wrote */
+		it->second.broadcast(":" + nick + "!" + user + "@host QUIT :Client Quit");
 		it->second.removeUser(client_fd);
 		it->second.removeOperator(client_fd);
 		if (it->second.getUserCount() == 0)
@@ -163,7 +169,6 @@ void Server::RemoveClient(int client_fd)
 			channels.erase(it++);
 			continue;
 		}
-		++it;
 	}
 
 	// Remove pollfd entry
