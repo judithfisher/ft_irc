@@ -84,7 +84,7 @@ public:
 	void HandleTopic(int client_fd, const std::vector<std::string> &line, int client_index);
 	void HandleInvite(int client_fd, const std::vector<std::string> &line, int client_index);
 	void HandleKick(int client_fd, const std::vector<std::string> &line, int client_index);
-	void HandleQuit(int client_fd, int client_index);
+	void HandleQuit(int client_fd, int client_index, std::vector<std::string> tokens);
 	void SendMessage(int client_fd, const std::vector<std::string> &line, int client_index);
 	void HandleMode(int client_fd, const std::vector<std::string> &line, int client_index);
 

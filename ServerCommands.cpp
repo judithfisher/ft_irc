@@ -257,7 +257,7 @@ void Server::HandleJoin(int client_fd, const std::vector<std::string> &line, int
 		} 
 		else if (!ch->isUserInvited(client_fd)) 
 		{
-			sendLine(client_fd, "473 " + channel_name + " :Cannot join channel (+i)");
+			sendLine(client_fd, ":server 473 " + channel_name + " :Cannot join channel (+i)");
 			return;
 		}
 	}
@@ -265,7 +265,7 @@ void Server::HandleJoin(int client_fd, const std::vector<std::string> &line, int
 	{
 		if (line.size() < 3 || line[2] != ch->getPassword()) 
 		{
-			sendLine(client_fd, "475 " + channel_name + " :Cannot join channel (+k) - bad key");
+			sendLine(client_fd, ":server 475 " + channel_name + " :Cannot join channel (+k) - bad key");
 			return;
 		}
 	}
@@ -273,7 +273,7 @@ void Server::HandleJoin(int client_fd, const std::vector<std::string> &line, int
 	 forcing limit for users */
 	if (ch->getUserLimit() > 0 && ch->getUserCount() >= (size_t)ch->getUserLimit()) 
 	{
-		sendLine(client_fd, "471 " + channel_name + " :Cannot join channel (+l)");
+		sendLine(client_fd, ":server 471 " + channel_name + " :Cannot join channel (+l)");
 		return;
 	}
 	/* MODE */
@@ -303,11 +303,11 @@ void Server::HandleJoin(int client_fd, const std::vector<std::string> &line, int
 
 	// 2) Topic (only to joining user)
 	// 331: RPL_NOTOPIC
-	sendLine(client_fd, "331 " + nick + " " + channel_name + " :No topic is set");
+	sendLine(client_fd, ":server 331 " + nick + " " + channel_name + " :No topic is set");
 
 	// 3) Names list (only to joining user)
 	// 353: RPL_NAMREPLY
-	std::string names = "353 " + nick + " = " + channel_name + " :";
+	std::string names = ":server 353 " + nick + " = " + channel_name + " :";
 	for (std::map<std::string, int>::const_iterator it = members.begin();
 		it != members.end(); ++it)
 	{
@@ -316,11 +316,12 @@ void Server::HandleJoin(int client_fd, const std::vector<std::string> &line, int
 		names += it->first;
 		names += " ";
 	}
+	std::cout << "Names: " << names << std::endl;
 	sendLine(client_fd, names);
 
 	// 4) End of names
 	// 366: RPL_ENDOFNAMES
-	sendLine(client_fd, "366 " + nick + " " + channel_name + " :End of /NAMES list");
+	sendLine(client_fd, ":server 366 " + nick + " " + channel_name + " :End of /NAMES list");
 
 	std::cout << "Client " << nick << " joined " << channel_name << std::endl;
 }
@@ -333,13 +334,13 @@ void Server::HandlePrivMsg(int client_fd, const std::vector<std::string> &line, 
 	if (line.size() < 2)
 	{
 		// 411: ERR_NORECIPIENT
-		sendLine(client_fd, "411 :No recipient given (PRIVMSG)");
+		sendLine(client_fd, ":server 411 :No recipient given (PRIVMSG)");
 		return;
 	}
 	if (line.size() < 3)
 	{
 		// 412: ERR_NOTEXTTOSEND
-		sendLine(client_fd, "412 :No text to send");
+		sendLine(client_fd, ":server 412 :No text to send");
 		return;
 	}
 
@@ -366,13 +367,13 @@ void Server::HandlePrivMsg(int client_fd, const std::vector<std::string> &line, 
 		if (!ch)
 		{
 			// 403: ERR_NOSUCHCHANNEL
-			sendLine(client_fd, "403 " + target + " :No such channel");
+			sendLine(client_fd, ":server 403 " + target + " :No such channel");
 			return;
 		}
 		if (!ch->isUserInChannel(client_fd))
 		{
 			// 404: ERR_CANNOTSENDTOCHAN
-			sendLine(client_fd, "404 " + target + " :Cannot send to channel");
+			sendLine(client_fd, ":server 404 " + target + " :Cannot send to channel");
 			return;
 		}
 
@@ -398,7 +399,7 @@ void Server::HandlePrivMsg(int client_fd, const std::vector<std::string> &line, 
 	}
 
 	// 401: ERR_NOSUCHNICK
-	sendLine(client_fd, "401 " + target + " :No such nick/channel");												// otherwise, no channel nor user found
+	sendLine(client_fd, ":server 401 " + target + " :No such nick/channel");												// otherwise, no channel nor user found
 }
 
 void Server::HandleTopic(int client_fd, const std::vector<std::string> &line, int client_index)
@@ -409,20 +410,28 @@ void Server::HandleTopic(int client_fd, const std::vector<std::string> &line, in
 		
 	if (line.size() < 2)
 	{
-		sendLine(client_fd, "461 TOPIC :Not enough parameters");				
+		sendLine(client_fd, ":server 461 TOPIC :Not enough parameters");				
 		return ;
 	}
 	
 	if (clients[client_index].getIsInChannel() == false)
 	{
-		sendLine(client_fd, "442 :You're not on that channel");
+		sendLine(client_fd, ":server 442 :You're not on that channel");
 		return ;
 	}
 	
 	Channel *ch = getChannel(line[1]);
 	if (!ch)
 		return ;
-
+		
+	/* MODE */
+	std::cout << "HEEERRRREEEEE" << std::endl;
+	if (ch->getTopicRestricted() == true && !ch->isOperator(client_fd))
+	{
+		std::cout << "NOOOOOWWWWWW" << std::endl;
+		sendLine(client_fd, ":server 482 " + line[1] + " :You're not channel operator");
+		return ;
+	}
 	std::string nick = clients[client_index].getNickname();
 	if (line.size() == 2)		
 	{
@@ -430,26 +439,14 @@ void Server::HandleTopic(int client_fd, const std::vector<std::string> &line, in
 		if (!current_topic.empty())
 		{
 			// ch->setTopicRestricted(true); //we just seeing here as i understand
-			sendLine(client_fd, "332 " + nick + " " + line[1] + " :" + current_topic);							// 332: RPL_TOPIC
+			sendLine(client_fd, ":server 332 " + nick + " " + line[1] + " :" + current_topic);							// 332: RPL_TOPIC
 			return ;
 		}
-		sendLine(client_fd, "331 " + nick + " " + line[1] + " :No topic is set");
+		sendLine(client_fd, ":server 331 " + nick + " " + line[1] + " :No topic is set");
 		return ;
 	}
 
-	/* MODE */
-	if (ch->getTopicRestricted() == true && !ch->isOperator(client_fd))
-	{
-		sendLine(client_fd, "482 " + line[1] + " :You're not channel operator");
-		return ;
-	}
-	/* MODE */
 
-	if (ch->getTopicRestricted() == true && !ch->isOperator(client_fd))
-	{
-		sendLine(client_fd, "482 " + line[1] + " :You're not channel operator");
-		return ;
-	}
 	std::string topic = line[2];
 	ch->setTopic(topic);
 	std::map<std::string, int> members = ch->getClients();
@@ -463,7 +460,7 @@ void Server::HandleInvite(int client_fd, const std::vector<std::string> &line, i
 {
 	if (line.size() < 3)
 	{
-		sendLine(client_fd, "461 INVITE :Not enough parameters");
+		sendLine(client_fd, ":server 461 INVITE :Not enough parameters");
 		return ;
 	}
 	// int client_index = findClientbyFd(client_fd);
@@ -478,7 +475,7 @@ void Server::HandleInvite(int client_fd, const std::vector<std::string> &line, i
 	
 	if (clients[client_index].getIsInChannel() == false)
 	{
-		sendLine(client_fd, "442 :You're not on that channel");
+		sendLine(client_fd, ":server 442 :You're not on that channel");
 		return ;
 	}
 	
@@ -489,7 +486,7 @@ void Server::HandleInvite(int client_fd, const std::vector<std::string> &line, i
 	
 	if (!ch->isOperator(client_fd))
 	{
-		sendLine(client_fd, "482 :You're not channel operator");
+		sendLine(client_fd, ":server 482 :You're not channel operator");
 		return ;
 	}
 	std::string target_nick = line[1];
@@ -504,7 +501,7 @@ void Server::HandleInvite(int client_fd, const std::vector<std::string> &line, i
 	}
 	if (target_fd == -1)
 	{
-		sendLine(client_fd, "401 " + target_nick + " :No such nick/channel");
+		sendLine(client_fd, ":server 401 " + target_nick + " :No such nick/channel");
 		return ;
 	}
 	ch->addUser(target_fd, target_nick);
@@ -516,7 +513,7 @@ void Server::HandleKick(int client_fd, const std::vector<std::string> &line, int
 {
 	if (line.size() < 3)
 	{
-		sendLine(client_fd, "461 KICK :Not enough parameters");
+		sendLine(client_fd, ":server 461 KICK :Not enough parameters");
 		return ;
 	}
 	// int client_index = findClientbyFd(client_fd);
@@ -531,7 +528,7 @@ void Server::HandleKick(int client_fd, const std::vector<std::string> &line, int
 	
 	if (clients[client_index].getIsInChannel() == false)
 	{
-		sendLine(client_fd, "442 :You're not on that channel");
+		sendLine(client_fd, ":server 442 :You're not on that channel");
 		return ;
 	}
 	
@@ -542,7 +539,7 @@ void Server::HandleKick(int client_fd, const std::vector<std::string> &line, int
 	
 	if (!ch->isOperator(client_fd))
 	{
-		sendLine(client_fd, "482 :You're not channel operator");
+		sendLine(client_fd, ":server 482 :You're not channel operator");
 		return ;
 	}
 	std::string target_nick = line[2];
@@ -569,10 +566,33 @@ void Server::HandleKick(int client_fd, const std::vector<std::string> &line, int
 	ch->removeUser(target_fd);
 	std::cout << "Client fd: " << client_fd << " kicked " << target_nick << " from channel " << channel_name << std::endl;
 }
-/* IRS does not read ANSI code it will either ignore or send gibberish */
-void Server::HandleQuit(int client_fd, int client_index)
+
+/* IRS does not read ANSI code it will either ignore or send gibberish so no colors in sendLine (send) */
+void Server::HandleQuit(int client_fd, int client_index, std::vector<std::string> tokens)
 {
-	(void)client_index; //change upon expanding code
+	/* broadcast message to all channels */
+	std::string nick = clients[client_index].getNickname();
+	std::string user = clients[client_index].getUsername();
+	std::string msg;
+	if(tokens.size() == 1)
+		msg = ":Client Quit";
+	else if (tokens.size() > 1)
+	{
+		if(tokens[1][0] != ':')
+			msg = ":" + tokens[1];
+		else
+			msg = tokens[1];
+		for(size_t i = 2; i < tokens.size(); i++)
+			msg += " " + tokens[i];
+	}
+	for (std::map<std::string, Channel>::iterator it = channels.begin(); it != channels.end();)
+		if(it->second.isUserInChannel(client_fd))
+		{
+			it->second.broadcast(":" + nick + "!" + user + "@host QUIT " + msg);
+			++it;
+		}
+
+
 	std::cout << "Client fd: " << client_fd << " is quitting." << std::endl;
 	sendLine(client_fd, "\033[2J\033[H");  // Clear screen
 	// checker needs to go here if user in channel, for loop to erase user from channel
@@ -776,7 +796,7 @@ void Server::ProcessCommand(int client_fd, const std::string &line)
 	else if (command == "USER")
 		HandleUser(client_fd, tokens, client_index);
 	else if (command == "QUIT")
-		HandleQuit(client_fd, client_index);
+		HandleQuit(client_fd, client_index, tokens);
 	/* one check for all Commands */
 	else if(clients[client_index].getIsRegistered() == true)
 	{
