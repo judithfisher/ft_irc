@@ -40,6 +40,19 @@ void Channel::addUser(int client_fd, const std::string &client_nick)
 	users.push_back(client_fd);
 }
 
+void Channel::updateUserNick(int client_fd, const std::string &new_nick)
+{
+	for (std::map<std::string, int>::iterator it = channel_clients.begin(); it != channel_clients.end(); it++)
+	{
+		if (it->second == client_fd)
+		{
+			channel_clients.erase(it);
+			break;
+		}
+	}
+	channel_clients.insert(std::make_pair(new_nick, client_fd));
+}
+
 void Channel::removeUser(int client_fd)
 {
 	for (size_t i = 0; i < users.size(); i++)

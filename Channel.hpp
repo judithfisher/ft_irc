@@ -14,6 +14,7 @@ class Channel
 		~Channel();
 
 		void addUser(int client_fd, const std::string &client_nick);
+		void updateUserNick(int client_fd, const std::string &new_nick);
 		void removeUser(int client_fd);
 		void addOperator(int client_fd);
 		void removeOperator(int client_fd);

@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/24 18:05:00 by codex             #+#    #+#             */
-/*   Updated: 2026/02/01 18:52:19 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/02/01 19:14:54 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -181,20 +181,15 @@ void Server::HandleNick(int client_fd, const std::vector<std::string> &line, int
 		{
 			std::string old_nick = clients[client_index].getNickname();
 			clients[client_index].setNickname(nickname);
-			if (clients[client_index].getIsInChannel())
+			for (std::map<std::string, Channel>::iterator it = channels.begin(); it != channels.end(); it++)
 			{
-				// Notify all channels about the nickname change
-				for (std::map<std::string, Channel>::iterator it = channels.begin(); it != channels.end(); it++)
+				if (it->second.isUserInChannel(client_fd))
 				{
-					if (it->second.isUserInChannel(client_fd))
-					{
-						std::string nickChangeMsg = ":" + old_nick + "!" + clients[client_index].getUsername() + "@host NICK :" + nickname;
-						// const std::map<std::string, int> &members = it->second.getClients();
-						// for (std::map<std::string, int>::const_iterator mit = members.begin(); mit != members.end(); ++mit)
-							// sendLine(mit->second, nickChangeMsg);
-							it->second.broadcast(nickChangeMsg);
-					}
+					it->second.updateUserNick(client_fd, nickname);
+					std::string nickChangeMsg = ":" + old_nick + "!" + clients[client_index].getUsername() + "@host NICK :" + nickname;
+					it->second.broadcast(nickChangeMsg);
 				}
+				// }
 			}
 		}
 	}
