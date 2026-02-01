@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/24 18:05:00 by codex             #+#    #+#             */
-/*   Updated: 2026/02/01 14:22:40 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/02/01 17:29:45 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -141,12 +141,17 @@ void Server::ReceiveData(int client_fd)
 	if (client_index < 0)
 		return;
 
-	// Buffer can contain partial lines; Client buffers until newline.
-	clients[client_index].AppendToBuffer(std::string(buffer, bytes_received));
+	// clients[client_index].setBuffer(std::string(buffer, bytes_received));
+	std::string buffer1 = std::string(buffer, bytes_received);
+	clients[client_index].AppendToBuffer(buffer1);
 	std::vector<std::string> cmds = clients[client_index].ExtractCompleteCommands();
 
 	for (size_t i = 0; i < cmds.size(); i++)
+	{	
+		std::cout << "process raw command: " << cmds[i] << std::endl;
 		ProcessCommand(client_fd, cmds[i]);
+		std::cout << cmds[i] << std::endl;
+	}
 }
 
 void Server::RemoveClient(int client_fd)

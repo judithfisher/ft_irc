@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 17:25:24 by jfischer          #+#    #+#             */
-/*   Updated: 2026/02/01 14:22:23 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/02/01 17:30:32 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,9 +82,9 @@ void Client::setRegistered()
 	this->isRegistered = true;
 }
 
-void Client::setIsOperator(bool status)
+void Client::setBuffer(const std::string &buffer)
 {
-	this->isOperator = status;
+	this->buffer = buffer;
 }
 
 std::string Client::getUsername() const
@@ -107,6 +107,13 @@ bool Client::getIsRegistered() const
 {
 	return (this->isRegistered);
 }
+
+std::string Client::getBuffer() const
+{
+	return (this->buffer);
+}
+
+#include <iostream>
 
 void Client::AppendToBuffer(const std::string &rec_buffer)
 {
@@ -150,6 +157,10 @@ std::vector<std::string> Client::ExtractCompleteCommands()
 		if (!line.empty())
 			commands.push_back(line);
 
+
+		std::cout << "EXTRACT buffer raw " +  this->buffer << std::endl;
+		std::cout << "EXTRACT line extracted " +  line << std::endl;
+		
 		// Remove from buffer
 		this->buffer.erase(0, pos + 1);
 	}

@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 16:44:51 by jfischer          #+#    #+#             */
-/*   Updated: 2026/02/01 13:11:10 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/02/01 17:33:39 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,6 +52,7 @@ class Server
 		std::vector<Client> clients;			 // to keep track of connected clients + to manage their requests
 		std::vector<struct pollfd> fds;			 // vector of pollfd, to monitor multiple file descriptors
 		std::map<std::string, Channel> channels; // map of channel name to Channel object
+		
 	public:
 		Server();
 		Server(const Server &other);
@@ -80,12 +81,11 @@ class Server
 		void HandleNick(int client_fd, const std::vector<std::string> &line, int client_index);
 		void HandleUser(int client_fd, const std::vector<std::string> &line, int client_index);
 		void HandleJoin(int client_fd, const std::vector<std::string> &line, int client_index);
-		// void HandleWho(int client_fd, const std::vector<std::string> &line);
 		void HandlePrivMsg(int client_fd, const std::vector<std::string> &line, int client_index);
 		void HandleTopic(int client_fd, const std::vector<std::string> &line, int client_index);
 		void HandleInvite(int client_fd, const std::vector<std::string> &line, int client_index);
 		void HandleKick(int client_fd, const std::vector<std::string> &line, int client_index);
-		void HandleQuit(int client_fd, int client_index,const std::vector<std::string> &line);
+		void HandleQuit(int client_fd, int client_index, std::vector<std::string> tokens);
 		void SendMessage(int client_fd, const std::vector<std::string> &line, int client_index);
 		void HandleMode(int client_fd, const std::vector<std::string> &line, int client_index);
 
@@ -98,6 +98,7 @@ class Server
 		void createChannel(const std::string &name); // create a new channel
 		void removeChannel(const std::string &name); // remove channel by name
 		// End of channel management
+		
 		static bool SignalReceived; // part of class server, not individual objects --> static
 
 		// For try catch blockm
@@ -118,6 +119,7 @@ class Server
 		public:
 			const char *what() const throw();
 		};
+		
 		class PassLengh : public std::exception
 		{
 		public:
@@ -128,7 +130,7 @@ class Server
 		{
 			const char *what() const throw();
 		};
-};
+	};
 
 #endif
 

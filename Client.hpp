@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 16:45:13 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/31 23:36:49 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/02/01 17:30:17 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ public:
 	void setIsInChannel();
 	void setPassAccepted();
 	void setRegistered();
-	void setIsOperator(bool status);
+	void setBuffer(const std::string &buffer);
 
 	// getters
 	int getFd();
@@ -42,6 +42,7 @@ public:
 	bool getPassAccepted() const;
 	bool getIsRegistered() const;
 	bool getIsOperator() const;
+	std::string getBuffer() const;
 	int getClientfd(std::string &nick) const;
 
 	void AppendToBuffer(const std::string &rec_buffer);
