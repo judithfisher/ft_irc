@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: judith <judith@student.42.fr>              +#+  +:+       +#+        */
+/*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 17:25:24 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/26 17:42:10 by judith           ###   ########.fr       */
+/*   Updated: 2026/02/01 16:23:20 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,6 +82,11 @@ void Client::setRegistered()
 	this->isRegistered = true;
 }
 
+void Client::setBuffer(const std::string &buffer)
+{
+	this->buffer = buffer;
+}
+
 std::string Client::getUsername() const
 {
 	return (this->username);
@@ -103,10 +108,17 @@ bool Client::getIsRegistered() const
 	return (this->isRegistered);
 }
 
+std::string Client::getBuffer() const
+{
+	return (this->buffer);
+}
+
+#include <iostream>
+
 void Client::AppendToBuffer(const std::string &rec_buffer)
 {
-	buffer += rec_buffer;
-	if (buffer.size() > MAX_BUFFER_SIZE)
+	this->buffer += rec_buffer;
+	if (this->buffer.size() > MAX_BUFFER_SIZE)
 		throw std::runtime_error("No spamming allowed, you fool! Exceeded maximum buffer size.");
 }
 
@@ -129,13 +141,13 @@ std::vector<std::string> Client::ExtractCompleteCommands()
 	while (true)
 	{
 		// Find newline (\r\n or \n)
-		size_t pos = buffer.find('\n');
+		size_t pos = this->buffer.find('\n');
 
 		if (pos == std::string::npos)
 			break;
 
 		// Extract line before \n
-		std::string line = buffer.substr(0, pos);
+		std::string line = this->buffer.substr(0, pos);
 
 		// Remove trailing \r if present
 		if (!line.empty() && line[line.length() - 1] == '\r')
@@ -145,9 +157,13 @@ std::vector<std::string> Client::ExtractCompleteCommands()
 		if (!line.empty())
 			commands.push_back(line);
 
+
+		std::cout << "EXTRACT buffer raw " +  this->buffer << std::endl;
+		std::cout << "EXTRACT line extracted " +  line << std::endl;
+		
 		// Remove from buffer
-		buffer.erase(0, pos + 1);
+		this->buffer.erase(0, pos + 1);
 	}
 
-	return commands;
+	return (commands);
 }

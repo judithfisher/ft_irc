@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/24 18:05:00 by codex             #+#    #+#             */
-/*   Updated: 2026/01/30 21:55:17 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/02/01 17:20:21 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -164,30 +164,56 @@ void Server::HandleNick(int client_fd, const std::vector<std::string> &line, int
 				return;
 			}
 		}
-		clients[client_index].setNickname(nickname);
-		std::cout << "Client fd: " << client_fd << " set nickname to: " << nickname << std::endl;
-		if (clients[client_index].getNickname().size() != 0 && clients[client_index].getUsername().size() != 0)
+		if(!(clients[client_index].getNickname().size() > 0))
 		{
-			clients[client_index].setRegistered();
-			/* server need to acknowledge registration by seeing somewhere 001 info: */
-			sendLine(client_fd, ":server 001 " + clients[client_index].getNickname() + " :Welcome to the ft_IRC server " + clients[client_index]. getNickname());
+			clients[client_index].setNickname(nickname);
+			std::cout << "Client fd: " << client_fd << " set nickname to: " << nickname << std::endl;
+			if (clients[client_index].getNickname().size() != 0 && clients[client_index].getUsername().size() != 0)
+			{
+				clients[client_index].setRegistered();
+				/* server need to acknowledge registration by seeing somewhere 001 info: */
+				sendLine(client_fd, ":server 001 " + clients[client_index].getNickname() + " :Welcome to the ft_IRC server " + clients[client_index]. getNickname());
+			}
+		}
+		else
+		{
+			std::string old_nick = clients[client_index].getNickname();
+			clients[client_index].setNickname(nickname);
+			if (clients[client_index].getIsInChannel())
+			{
+				// Notify all channels about the nickname change
+				for (std::map<std::string, Channel>::iterator it = channels.begin(); it != channels.end(); ++it)
+				{
+					if (it->second.isUserInChannel(client_fd))
+					{
+						std::string nickChangeMsg = ":" + old_nick + "!" + clients[client_index].getUsername() + "@host NICK :" + nickname;
+						const std::map<std::string, int> &members = it->second.getClients();
+						for (std::map<std::string, int>::const_iterator mit = members.begin(); mit != members.end(); ++mit)
+							sendLine(mit->second, nickChangeMsg);
+					}
+				}
+			}
 		}
 	}
 	else
-		std::cerr << "Client fd: " << client_fd
-			<< " attempted to set nickname without passing authentication." << std::endl;
+		std::cerr << "Client fd: " << client_fd << " attempted to set nickname without passing authentication." << std::endl;
 }
 
 void Server::HandleUser(int client_fd, const std::vector<std::string> &line, int client_index)
 {
-	// int client_index = findClientbyFd(client_fd);
-	// if (client_index < 0)
-	// 	return;
 	if (line.size() < 2)
 	{
 		std::cerr << "Client fd: " << client_fd << " sent USER without parameter." << std::endl;
 		return;
 	}
+
+	if (clients[client_index].getUsername().size() != 0)
+	{
+		std::cerr << "Client fd: " << client_fd << " attempted to set username again." << std::endl;
+		sendLine(client_fd,":server 462 " + clients[client_index].getNickname() + " :You may not reregister");
+		return ;
+	}
+	
 	std::string username = line[1];
 	if (clients[client_index].getPassAccepted() == true)
 	{
@@ -207,17 +233,6 @@ void Server::HandleUser(int client_fd, const std::vector<std::string> &line, int
 
 void Server::HandleJoin(int client_fd, const std::vector<std::string> &line, int client_index)
 {
-	// int client_index = findClientbyFd(client_fd);
-	// if (client_index < 0)
-	// 	return;
-
-	// if (!clients[client_index].getIsRegistered())
-	// {
-	// 	// 451: ERR_NOTREGISTERED
-	// 	sendLine(client_fd, "451 :You have not registered");
-	// 	return;
-	// }
-
 	if (line.size() < 2)
 	{
 		// 461: ERR_NEEDMOREPARAMS
@@ -403,11 +418,7 @@ void Server::HandlePrivMsg(int client_fd, const std::vector<std::string> &line, 
 }
 
 void Server::HandleTopic(int client_fd, const std::vector<std::string> &line, int client_index)
-{
-	// int client_index = findClientbyFd(client_fd);
-	// if (client_index < 0)
-	// 	return ;
-		
+{		
 	if (line.size() < 2)
 	{
 		sendLine(client_fd, ":server 461 TOPIC :Not enough parameters");				
@@ -585,13 +596,16 @@ void Server::HandleQuit(int client_fd, int client_index, std::vector<std::string
 		for(size_t i = 2; i < tokens.size(); i++)
 			msg += " " + tokens[i];
 	}
-	for (std::map<std::string, Channel>::iterator it = channels.begin(); it != channels.end();)
-		if(it->second.isUserInChannel(client_fd))
-		{
-			it->second.broadcast(":" + nick + "!" + user + "@host QUIT " + msg);
-			++it;
-		}
-
+	/* in this moment we added if statement. was working(?) without if previously just inside of if walid */
+	if (clients[client_index].getIsInChannel())
+	{
+		for (std::map<std::string, Channel>::iterator it = channels.begin(); it != channels.end();)
+			if(it->second.isUserInChannel(client_fd))
+			{
+				it->second.broadcast(":" + nick + "!" + user + "@host QUIT " + msg);
+				++it;
+			}
+	}
 
 	std::cout << "Client fd: " << client_fd << " is quitting." << std::endl;
 	sendLine(client_fd, "\033[2J\033[H");  // Clear screen
