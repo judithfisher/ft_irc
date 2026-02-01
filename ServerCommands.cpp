@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/24 18:05:00 by codex             #+#    #+#             */
-/*   Updated: 2026/02/01 19:48:40 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/02/01 19:59:03 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -356,14 +356,21 @@ void Server::HandlePrivMsg(int client_fd, const std::vector<std::string> &line, 
 		sendLine(client_fd, ":server 412 :No text to send");
 		return;
 	}
+
+	// if (line[2][0] != ':')
+	// {
+	// 	// 412: ERR_NOTEXTTOSEND
+	// 	sendLine(client_fd, ":server 412 :No text to send");
+	// 	return;
+	// }
 	
 	std::string target = line[1];
 	std::string message;
-	for (size_t i = 2; i < line.size(); i++)
+	message = line[2];
+	for (size_t i = 3; i < line.size(); i++)
 	{
-			message = line[i];
 			if (i > 2)
-				message = " " + message;
+				message += " " + message;
 			//message = message + line[i];
 	}
 
