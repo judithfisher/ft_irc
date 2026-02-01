@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 16:44:51 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/31 23:39:29 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/02/01 13:11:10 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,7 +80,7 @@ class Server
 		void HandleNick(int client_fd, const std::vector<std::string> &line, int client_index);
 		void HandleUser(int client_fd, const std::vector<std::string> &line, int client_index);
 		void HandleJoin(int client_fd, const std::vector<std::string> &line, int client_index);
-		void HandleWho(int client_fd, const std::vector<std::string> &line);
+		// void HandleWho(int client_fd, const std::vector<std::string> &line);
 		void HandlePrivMsg(int client_fd, const std::vector<std::string> &line, int client_index);
 		void HandleTopic(int client_fd, const std::vector<std::string> &line, int client_index);
 		void HandleInvite(int client_fd, const std::vector<std::string> &line, int client_index);

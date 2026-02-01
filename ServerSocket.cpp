@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/24 18:05:00 by codex             #+#    #+#             */
-/*   Updated: 2026/01/31 21:22:27 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/02/01 14:22:40 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -145,7 +145,7 @@ void Server::ReceiveData(int client_fd)
 	clients[client_index].AppendToBuffer(std::string(buffer, bytes_received));
 	std::vector<std::string> cmds = clients[client_index].ExtractCompleteCommands();
 
-	for (size_t i = 0; i < cmds.size(); ++i)
+	for (size_t i = 0; i < cmds.size(); i++)
 		ProcessCommand(client_fd, cmds[i]);
 }
 

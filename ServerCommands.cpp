@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/24 18:05:00 by codex             #+#    #+#             */
-/*   Updated: 2026/01/31 23:28:03 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/02/01 13:32:49 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,51 +77,51 @@ std::vector<std::string> Server::ParseCommand(const std::string &line)
 	return (tokens);
 }
 
-void Server::HandleWho(int client_fd, const std::vector<std::string> &line)
-{
-	int client_index = findClientbyFd(client_fd);
-	if (client_index < 0 || clients[client_index].getIsRegistered() == false)
-		return;
-	if (line.size() < 2)
-	{
-		sendLine(client_fd, "461 WHO :Not enough parameters");
-		return;
-	}
-	std::string target = line[1];
-	std::string nick = clients[client_index].getNickname();
+// void Server::HandleWho(int client_fd, const std::vector<std::string> &line)
+// {
+// 	int client_index = findClientbyFd(client_fd);
+// 	if (client_index < 0 || clients[client_index].getIsRegistered() == false)
+// 		return;
+// 	if (line.size() < 2)
+// 	{
+// 		sendLine(client_fd, "461 WHO :Not enough parameters");
+// 		return;
+// 	}
+// 	std::string target = line[1];
+// 	std::string nick = clients[client_index].getNickname();
 
-	// WHO for channel
-	if (!target.empty() && target[0] == '#')
-	{
-		Channel *ch = getChannel(target);
-		if (!ch || !ch->isUserInChannel(client_fd))
-		{
-			sendLine(client_fd, ":ircserv 315 " + nick + " " + target + " :End of WHO list");
-			return;
-		}
+// 	// WHO for channel
+// 	if (!target.empty() && target[0] == '#')
+// 	{
+// 		Channel *ch = getChannel(target);
+// 		if (!ch || !ch->isUserInChannel(client_fd))
+// 		{
+// 			sendLine(client_fd, ":ircserv 315 " + nick + " " + target + " :End of WHO list");
+// 			return;
+// 		}
 
-		// Send WHO reply for each member
-		const std::map<std::string, int> &members = ch->getClients();
-		std::map<std::string, int>::const_iterator it;
-		for (it = members.begin(); it != members.end(); it++)
-		{ 
-			std::string member_nick = it->first;
-			int member_fd = it->second;
-			int member_index = findClientbyFd(member_fd);
-			if (member_index < 0)
-				continue;
-			std::string member_user = clients[member_index].getUsername();
+// 		// Send WHO reply for each member
+// 		const std::map<std::string, int> &members = ch->getClients();
+// 		std::map<std::string, int>::const_iterator it;
+// 		for (it = members.begin(); it != members.end(); it++)
+// 		{ 
+// 			std::string member_nick = it->first;
+// 			int member_fd = it->second;
+// 			int member_index = findClientbyFd(member_fd);
+// 			if (member_index < 0)
+// 				continue;
+// 			std::string member_user = clients[member_index].getUsername();
 			
-			std::string flags = "H"; // Here, we assume all users are "here" and not away.
-			if (ch->isOperator(member_fd))
-				flags += "@";
+// 			std::string flags = "H"; // Here, we assume all users are "here" and not away.
+// 			if (ch->isOperator(member_fd))
+// 				flags += "@";
 
-			std::string who_reply = ":ircserv 352 " + nick + " " + target + " " + member_user + " host " + "ircserv " + member_nick + " " + flags + " :0 Real Name";
-			sendLine(client_fd, who_reply);
-		}
-		sendLine(client_fd, ":ircserv 315 " + nick + " " + target + " :End of WHO list");
-	}
-}
+// 			std::string who_reply = ":ircserv 352 " + nick + " " + target + " " + member_user + " host " + "ircserv " + member_nick + " " + flags + " :0 Real Name";
+// 			sendLine(client_fd, who_reply);
+// 		}
+// 		sendLine(client_fd, ":ircserv 315 " + nick + " " + target + " :End of WHO list");
+// 	}
+// }
 
 void Server::HandlePass(int client_fd, const std::vector<std::string> &line, int client_index)
 {
@@ -162,7 +162,10 @@ void Server::HandlePass(int client_fd, const std::vector<std::string> &line, int
 	}
 	
 	else
+	{
 		std::cout << "Client fd: " << client_fd << " provided incorrect password." << std::endl;
+		sendLine(client_fd,  ":server 464 * :Password incorrect" );
+	}
 }
 
 void Server::HandleNick(int client_fd, const std::vector<std::string> &line, int client_index)
@@ -226,6 +229,13 @@ void Server::HandleUser(int client_fd, const std::vector<std::string> &line, int
 	}
 	
 	std::string username = line[1];
+	
+	if (clients[client_index].getUsername().size() > 0)
+	{
+		std::cerr << "Client fd: " << client_fd << " attempted to change username after it was already set." << std::endl;
+		sendLine(client_fd, ":server 462 " + clients[client_index]. getNickname() + " :You may not reregister");
+		return ;
+	}
 	
 	if (clients[client_index].getPassAccepted() == true)
 	{
@@ -305,10 +315,12 @@ void Server::HandleJoin(int client_fd, const std::vector<std::string> &line, int
 	if (ch->getUserCount() == 1)
 		ch->addOperator(client_fd);
 
-	clients[client_index].setIsInChannel();
+	// clients[client_index].setIsInChannel();
 
 	std::string nick = clients[client_index].getNickname();
 	std::string user = clients[client_index].getUsername();
+	if (user.empty())
+		user = "user";
 
 	// 1) Broadcast JOIN to all members
 	std::string joinMsg = ":" + nick + "!" + user + "@host JOIN " + channel_name;
@@ -580,12 +592,21 @@ void Server::HandleQuit(int client_fd, int client_index, const std::vector<std::
 
 	std::map<std::string, Channel>::iterator it;
 	for (it = channels.begin(); it != channels.end(); it++)
+	{
 		if (it->second.isUserInChannel(client_fd))
-			it->second.broadcast(":" + nick + "!" + user + "@host QUIT " + msg);
-	
+		{
+			const std::map<std::string, int> &members = it->second.getClients();
+			std::map<std::string, int>::const_iterator mem_it;
+			for (mem_it = members.begin(); mem_it != members.end(); mem_it++)
+			{
+				if (mem_it->second != client_fd)
+					sendLine(mem_it->second, msg);
+			}
+			it->second.removeUser(client_fd);
+		}
+	}
 	std::cout << "Client fd: " << client_fd << "is quitting." << std::endl;
 	RemoveClient(client_fd);
-
 }
 
 //MODE
@@ -775,8 +796,8 @@ void Server::ProcessCommand(int client_fd, const std::string &line)
 		else
 			sendLine(client_fd, "PONG ircserv");
 	}
-	else if (command == "WHO")
-		HandleWho(client_fd, tokens);
+	// else if (command == "WHO")
+	// 	HandleWho(client_fd, tokens);
 	else if (command == "PASS")
 		HandlePass(client_fd, tokens, client_index);
 	else if (command == "NICK")
