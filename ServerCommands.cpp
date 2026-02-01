@@ -123,11 +123,9 @@ void Server::HandleWho(int client_fd, const std::vector<std::string> &line)
 	}
 }
 
-void Server::HandlePass(int client_fd, const std::vector<std::string> &line)
+void Server::HandlePass(int client_fd, const std::vector<std::string> &line, int client_index)
 {
-	int client_index = findClientbyFd(client_fd);
-	if (client_index < 0)
-		return;
+	
 	if (line.size() < 2)
 	{
 		std::cerr << "Client fd: " << client_fd << " sent PASS without parameter." << std::endl;
@@ -167,12 +165,8 @@ void Server::HandlePass(int client_fd, const std::vector<std::string> &line)
 		std::cout << "Client fd: " << client_fd << " provided incorrect password." << std::endl;
 }
 
-void Server::HandleNick(int client_fd, const std::vector<std::string> &line)
+void Server::HandleNick(int client_fd, const std::vector<std::string> &line, int client_index)
 {
-	int client_index = findClientbyFd(client_fd);
-	if (client_index < 0)
-		return ;
-		
 	if (line.size() < 2)
 	{
 		std::cerr << "Client fd: " << client_fd << " sent NICK without parameter." << std::endl;
@@ -790,7 +784,7 @@ void Server::ProcessCommand(int client_fd, const std::string &line)
 	else if (command == "USER")
 		HandleUser(client_fd, tokens, client_index);
 	else if (command == "QUIT")
-		HandleQuit(client_fd, client_index);
+		HandleQuit(client_fd, client_index, tokens);
 	/* one check for all Commands */
 	else if(clients[client_index].getIsRegistered() == true)
 	{
