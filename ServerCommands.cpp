@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/24 18:05:00 by codex             #+#    #+#             */
-/*   Updated: 2026/02/01 17:20:21 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/02/01 18:52:19 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -132,7 +132,7 @@ void Server::HandleNick(int client_fd, const std::vector<std::string> &line, int
 	if (line.size() < 2)
 	{
 		std::cerr << "Client fd: " << client_fd << " sent NICK without parameter." << std::endl;
-		sendLine(client_fd, "431 :No nickname given");
+		sendLine(client_fd, ":server 431 :No nickname given");
 		return;
 	}
 	std::string nickname = line[1];
@@ -143,7 +143,7 @@ void Server::HandleNick(int client_fd, const std::vector<std::string> &line, int
 			if (clients[i].getNickname() == nickname)
 			{
 				std::cerr << "Client fd: " << client_fd << " attempted to set duplicate nickname: " << nickname << std::endl;
-				sendLine(client_fd, "433 " + nickname + " :Nickname is already in use");
+				sendLine(client_fd, ":server 433 " + nickname + " :Nickname is already in use");
 				return;
 			}
 		}
@@ -151,7 +151,7 @@ void Server::HandleNick(int client_fd, const std::vector<std::string> &line, int
 		{	
 			/* friday added check */
 			std::cout << RED "invalid nick: starts from prohibited character." R<< std::endl;
-			sendLine(client_fd, "432 " +nickname + " :Erroneous nickname");
+			sendLine(client_fd, ":server 432 " +nickname + " :Erroneous nickname");
 			return;
 		}
 		for(size_t i = 0; i < nickname.size(); i++)
@@ -160,11 +160,12 @@ void Server::HandleNick(int client_fd, const std::vector<std::string> &line, int
 			if((nickname[i] == ' ') || (!isascii(nickname[i])))
 			{
 				std::cout << RED "invalid nick: space or non ascii char." R << std::endl;
-				sendLine(client_fd, "432 " +nickname + " :Erroneous nickname");
+				sendLine(client_fd, ":server 432 " +nickname + " :Erroneous nickname");
 				return;
 			}
 		}
-		if(!(clients[client_index].getNickname().size() > 0))
+		// if(!(clients[client_index].getNickname().size() > 0))
+		if(clients[client_index].getNickname().empty())
 		{
 			clients[client_index].setNickname(nickname);
 			std::cout << "Client fd: " << client_fd << " set nickname to: " << nickname << std::endl;
@@ -175,6 +176,7 @@ void Server::HandleNick(int client_fd, const std::vector<std::string> &line, int
 				sendLine(client_fd, ":server 001 " + clients[client_index].getNickname() + " :Welcome to the ft_IRC server " + clients[client_index]. getNickname());
 			}
 		}
+		
 		else
 		{
 			std::string old_nick = clients[client_index].getNickname();
@@ -182,14 +184,15 @@ void Server::HandleNick(int client_fd, const std::vector<std::string> &line, int
 			if (clients[client_index].getIsInChannel())
 			{
 				// Notify all channels about the nickname change
-				for (std::map<std::string, Channel>::iterator it = channels.begin(); it != channels.end(); ++it)
+				for (std::map<std::string, Channel>::iterator it = channels.begin(); it != channels.end(); it++)
 				{
 					if (it->second.isUserInChannel(client_fd))
 					{
 						std::string nickChangeMsg = ":" + old_nick + "!" + clients[client_index].getUsername() + "@host NICK :" + nickname;
-						const std::map<std::string, int> &members = it->second.getClients();
-						for (std::map<std::string, int>::const_iterator mit = members.begin(); mit != members.end(); ++mit)
-							sendLine(mit->second, nickChangeMsg);
+						// const std::map<std::string, int> &members = it->second.getClients();
+						// for (std::map<std::string, int>::const_iterator mit = members.begin(); mit != members.end(); ++mit)
+							// sendLine(mit->second, nickChangeMsg);
+							it->second.broadcast(nickChangeMsg);
 					}
 				}
 			}
@@ -236,7 +239,7 @@ void Server::HandleJoin(int client_fd, const std::vector<std::string> &line, int
 	if (line.size() < 2)
 	{
 		// 461: ERR_NEEDMOREPARAMS
-		sendLine(client_fd, "461 JOIN :Not enough parameters");
+		sendLine(client_fd, ":server 461 JOIN :Not enough parameters");
 		return;
 	}
 
@@ -599,12 +602,9 @@ void Server::HandleQuit(int client_fd, int client_index, std::vector<std::string
 	/* in this moment we added if statement. was working(?) without if previously just inside of if walid */
 	if (clients[client_index].getIsInChannel())
 	{
-		for (std::map<std::string, Channel>::iterator it = channels.begin(); it != channels.end();)
+		for (std::map<std::string, Channel>::iterator it = channels.begin(); it != channels.end(); it++)
 			if(it->second.isUserInChannel(client_fd))
-			{
 				it->second.broadcast(":" + nick + "!" + user + "@host QUIT " + msg);
-				++it;
-			}
 	}
 
 	std::cout << "Client fd: " << client_fd << " is quitting." << std::endl;

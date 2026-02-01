@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 16:44:51 by jfischer          #+#    #+#             */
-/*   Updated: 2026/01/30 21:19:36 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/02/01 18:01:00 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,7 @@
 
 class Server
 {
+	
 private:
 	int port;
 	int server_fd;
@@ -52,6 +53,7 @@ private:
 	std::vector<Client> clients;			 // to keep track of connected clients + to manage their requests
 	std::vector<struct pollfd> fds;			 // vector of pollfd, to monitor multiple file descriptors
 	std::map<std::string, Channel> channels; // map of channel name to Channel object
+	
 public:
 	Server();
 	Server(const Server &other);
