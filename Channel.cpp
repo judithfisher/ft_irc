@@ -248,6 +248,18 @@ void Channel::addInvitedUser(int client_fd)
     invitedUsers.push_back(client_fd);
 }
 
+void Channel::removeInvitedUser(int client_fd) 
+{
+	for (size_t i = 0; i < invitedUsers.size(); i++)
+	{
+		if (invitedUsers[i] == client_fd)
+		{
+			invitedUsers.erase(invitedUsers.begin() + i);
+			break;
+		}
+	}
+}
+
 bool Channel::isUserInvited(int client_fd) const 
 {
     for (size_t i = 0; i < invitedUsers.size(); i++)

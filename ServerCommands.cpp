@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/24 18:05:00 by codex             #+#    #+#             */
-/*   Updated: 2026/02/01 19:59:03 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/02/02 20:38:06 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -262,7 +262,6 @@ void Server::HandleJoin(int client_fd, const std::vector<std::string> &line, int
 
 	// +i (invite-only): allow only first user, all others must be invited
 	// Only the first user can join a +i channel without invite
-	std::cout << RED " user COUNT FOR IS INVITE: " R << ch->getUserCount()<< std::endl;
 	if (ch->isInviteOnly() && ch->getUserCount() > 0)
 	{
 		// if (ch->getUserCount() == 0) /* MONDAY for emopty chat situation */
@@ -273,7 +272,9 @@ void Server::HandleJoin(int client_fd, const std::vector<std::string> &line, int
 			sendLine(client_fd, ":server 473 " + channel_name + " :Cannot join channel (+i)");
 			return;
 		}
+		ch->removeInvitedUser(client_fd);
 	}
+	
 	if (ch->hasPassword()) 
 	{
 		if (line.size() < 3 || line[2] != ch->getPassword()) 
@@ -461,20 +462,12 @@ void Server::HandleTopic(int client_fd, const std::vector<std::string> &line, in
 
 void Server::HandleInvite(int client_fd, const std::vector<std::string> &line, int client_index)
 {
+	for(int i = 0; i < (int)line.size(); i++)
 	if (line.size() < 3)
 	{
 		sendLine(client_fd, ":server 461 INVITE :Not enough parameters");
 		return ;
 	}
-	// int client_index = findClientbyFd(client_fd);
-	// if (client_index < 0)	
-	// 	return ;
-
-	// if (clients[client_index].getIsRegistered() == false)
-	// {
-	// 	sendLine(client_fd, "451 :You have not registered");
-	// 	return ;
-	// }
 	
 	if (clients[client_index].getIsInChannel() == false)
 	{
@@ -482,16 +475,17 @@ void Server::HandleInvite(int client_fd, const std::vector<std::string> &line, i
 		return ;
 	}
 	
+	if (line[2][0] != '#')
+	{
+		sendLine(client_fd, ":server 403 " + line[2] + " :No such channel");
+		return ;
+	}
+	
 	std::string channel_name = line[2];
 	Channel *ch = getChannel(channel_name);
 	if (!ch)
 		return ;
-	
-	if (!ch->isOperator(client_fd))
-	{
-		sendLine(client_fd, ":server 482 :You're not channel operator");
-		return ;
-	}
+
 	std::string target_nick = line[1];
 	int target_fd = -1;
 	for (size_t i = 0; i < clients.size(); i++)
@@ -502,12 +496,21 @@ void Server::HandleInvite(int client_fd, const std::vector<std::string> &line, i
 			break ;
 		}
 	}
+	
 	if (target_fd == -1)
 	{
 		sendLine(client_fd, ":server 401 " + target_nick + " :No such nick/channel");
 		return ;
 	}
-	ch->addUser(target_fd, target_nick);
+	
+	if (ch->isInviteOnly() && !ch->isOperator(client_fd))
+	{
+    	sendLine(client_fd, ":server 482 " + channel_name + " :You're not channel operator");
+    	return;
+	}
+
+	ch->addInvitedUser(target_fd);
+
 	sendLine(target_fd, ":" + clients[client_index].getNickname() + "!" + clients[client_index].getUsername() + "@host INVITE " + target_nick + " " + channel_name);
 	std::cout << "Client fd: " << client_fd << " invited " << target_nick << " to channel " << channel_name << std::endl;
 }
@@ -694,10 +697,18 @@ void Server::HandleMode(int client_fd, const std::vector<std::string> &line, int
 				}
 				else 
 				{
-					if (adding)
+					if (adding)/* MONDAY  */
+					{
 						channel->addOperator(targetFd);
+						std::string modeMsg = ":" + clients[client_index].getNickname() + "!" + clients[client_index].getUsername() + "@host MODE " + channel->getName() + " +o " + clients[findClientbyFd(targetFd)].getNickname();
+						channel->broadcast(modeMsg);
+					}
 					else
+					{
 						channel->removeOperator(targetFd);
+						std::string modeMsg = ":" + clients[client_index].getNickname() + "!" + clients[client_index].getUsername() + "@host MODE " + channel->getName() + " -o " + clients[findClientbyFd(targetFd)].getNickname();
+						channel->broadcast(modeMsg);
+					}
 					modeChanged = true;
 				}
 			}
@@ -711,6 +722,11 @@ void Server::HandleMode(int client_fd, const std::vector<std::string> &line, int
 				if (line.size() > paramIndex) 
 				{
 					int limit = atoi(line[paramIndex++].c_str());
+					if(limit < 1)
+					{
+						sendLine(client_fd, ":server 461 " + clients[client_index].getNickname() + " MODE :Invalid limit for +l");
+						continue;
+					}
 					channel->setUserLimit(limit);
 					modeChanged = true;
 				} 
@@ -724,7 +740,10 @@ void Server::HandleMode(int client_fd, const std::vector<std::string> &line, int
 			}
 		}
 		else
-			sendLine(client_fd, ":server 472 " + std::string(1, mode) + " :is unknown mode char to me");
+		{
+			std::string m = std::string (1, mode);
+			sendLine(client_fd, ":server 472 " + clients[client_index].getNickname() + " " + m + " :is unknown mode char to me");
+		}
     }
 	if(modeChanged)
 	{

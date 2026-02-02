@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/24 18:05:00 by codex             #+#    #+#             */
-/*   Updated: 2026/02/01 16:15:57 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/02/02 21:13:18 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,7 +75,7 @@ void Server::RunServer()
 		if (poll_count == -1)
 		{
 			// poll can return -1 on shutdown (e.g. signal); exit loop to clean up.
-			std::cerr << "Poll failed " << std::endl;
+			// std::cerr << "Poll failed " << std::endl;
 			break;
 		}
 

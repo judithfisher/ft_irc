@@ -22,6 +22,7 @@ class Channel
 		bool isOperator(int client_fd) const;
 
 		void addInvitedUser(int client_fd);
+		void removeInvitedUser(int client_fd);
 		bool isUserInvited(int client_fd) const;
 
 		std::string getName() const; /* MONDAY no definition made.......... */
