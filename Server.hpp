@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 16:44:51 by jfischer          #+#    #+#             */
-/*   Updated: 2026/02/01 18:01:00 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/02/02 21:18:36 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,9 @@
 #include <cctype>		//for isdigit() isascii()
 #include <cstring>		//for strlen()
 #include <map>			//for map  , channels will be organiyzed in map with channel name as key and Channel object as value
+#include <cstdio>		//for perror()
+
+
 // my includes
 #include "Channel.hpp" //for Channel class
 #include "Client.hpp"  //for Client class
