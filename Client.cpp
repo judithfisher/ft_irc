@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 17:25:24 by jfischer          #+#    #+#             */
-/*   Updated: 2026/02/01 16:23:20 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/02/02 21:37:56 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,8 +113,6 @@ std::string Client::getBuffer() const
 	return (this->buffer);
 }
 
-#include <iostream>
-
 void Client::AppendToBuffer(const std::string &rec_buffer)
 {
 	this->buffer += rec_buffer;
@@ -156,10 +154,6 @@ std::vector<std::string> Client::ExtractCompleteCommands()
 		// Add non-empty lines
 		if (!line.empty())
 			commands.push_back(line);
-
-
-		std::cout << "EXTRACT buffer raw " +  this->buffer << std::endl;
-		std::cout << "EXTRACT line extracted " +  line << std::endl;
 		
 		// Remove from buffer
 		this->buffer.erase(0, pos + 1);

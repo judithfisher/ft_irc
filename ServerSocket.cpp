@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/24 18:05:00 by codex             #+#    #+#             */
-/*   Updated: 2026/02/02 21:35:02 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/02/02 22:00:14 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,26 +72,18 @@ void Server::RunServer()
 {
 	while (SignalReceived == false)
 	{
-		int poll_count = poll(fds.data(), fds.size(), -1); // -1 = no timeout
-		if (poll_count == -1)
-		{
-			// poll can return -1 on shutdown (e.g. signal); exit loop to clean up.
-			// std::cerr << "Poll failed " << std::endl;
+		int poll_count = poll(fds.data(), fds.size(), -1); 	// -1 = no timeout
+		if (poll_count == -1)								// poll can return -1 on shutdown (e.g. signal); exit loop to clean up.
 			break;
-		}
 
 		for (size_t i = 0; i < fds.size(); i++)
 		{
 			if (fds[i].revents & POLLIN)
 			{
 				if (fds[i].fd == this->server_fd)
-				{
 					AcceptClients();
-				}
 				else
-				{
 					ReceiveData(fds[i].fd);
-				}
 			}
 
 			if (fds[i].revents & (POLLERR | POLLHUP | POLLNVAL))
@@ -119,8 +111,7 @@ void Server::AcceptClients()
 		NewPoll.revents = 0;
 		fds.push_back(NewPoll);
 		clients.push_back(Client(client_fd));
-		std::cout << "New client connected, client_fd: " << clients.back().getFd()
-			<<  " total clients: " << clients.size() << std::endl;
+		std::cout << "New client connected, client_fd: " << clients.back().getFd() <<  " total clients: " << clients.size() << std::endl;
 	}
 }
 
@@ -146,7 +137,6 @@ void Server::ReceiveData(int client_fd)
 	if (client_index < 0)
 		return;
 
-	// clients[client_index].setBuffer(std::string(buffer, bytes_received));
 	std::string buffer1 = std::string(buffer, bytes_received);
 	clients[client_index].AppendToBuffer(buffer1);
 	std::vector<std::string> cmds = clients[client_index].ExtractCompleteCommands();
@@ -165,8 +155,7 @@ void Server::RemoveClient(int client_fd)
 	std::string nick = clients[client_index].getNickname();
 	std::string user = clients[client_index].getUsername();
 	// Ensure channel membership is cleaned up (fds get reused by the OS).
-	for (std::map<std::string, Channel>::iterator it = channels.begin();
-		it != channels.end();)
+	for (std::map<std::string, Channel>::iterator it = channels.begin(); it != channels.end(); it++)
 	{
 		/* //broadcast to everyone that client left + what he wrote 
 		it->second.broadcast(":" + nick + "!" + user + "@host QUIT :Client Quit"); */
@@ -179,14 +168,13 @@ void Server::RemoveClient(int client_fd)
 			channels.erase(it++);
 			continue;
 		}
-		else if (it->second.getOperatorsSize() < 1)/* MONDAY adding operator after deleting previous one upon quitting */
+		else if (it->second.getOperatorsSize() < 1)
 		{
 			int new_opr_fd = it->second.getFirstUser();
 			int new_cln_index = findClientbyFd(new_opr_fd);
 			it->second.addOperator(new_opr_fd);
 			it->second.broadcast(":server  MODE " + it->second.getName() + " +o " + clients[new_cln_index].getNickname());
 		}
-		++it;
 	}
 
 	// Remove pollfd entry
@@ -205,20 +193,15 @@ void Server::RemoveClient(int client_fd)
 	}
 
 	// Remove client object
-	for (size_t i = 0; i < clients.size(); ++i)
+	for (size_t i = 0; i < clients.size(); i++)
 	{
 		if (clients[i].getFd() == client_fd)
 		{
 			clients.erase(clients.begin() + i);
-			std::cout << "Client removed, client_fd: "
-				<< client_fd
-				<< " total clients: "
-				<< clients.size()
-				<< std::endl;
+			std::cout << "Client removed, client_fd: " << client_fd << " total clients: " << clients.size() << std::endl;
 			break;
 		}
 	}
-
 	close(client_fd);
 }
 

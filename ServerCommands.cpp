@@ -6,7 +6,7 @@
 /*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/24 18:05:00 by codex             #+#    #+#             */
-/*   Updated: 2026/02/02 20:38:06 by jfischer         ###   ########.fr       */
+/*   Updated: 2026/02/02 21:56:52 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,32 +58,11 @@ std::vector<std::string> Server::ParseCommand(const std::string &line)
 void Server::Greeting(int client_fd)
 {
 	sendLine(client_fd, "375 :- IRC SERVER 42 Message of the Day -");
-
-	sendLine(client_fd, " \033[1;35m░██████░█████████    ░██████       ░██████   ░██████████ ░█████████  ░██    ░██ ░██████████ ░█████████        ░████    ░██████");
-	sendLine(client_fd, "   ░██  ░██     ░██  ░██   ░██     ░██   ░██  ░██         ░██     ░██ ░██    ░██ ░██         ░██     ░██      ░██ ██   ░██   ░██");
-	sendLine(client_fd, "   ░██  ░██     ░██ ░██           ░██         ░██         ░██     ░██ ░██    ░██ ░██         ░██     ░██     ░██  ██         ░██");
-	sendLine(client_fd, "   ░██  ░█████████  ░██            ░████████  ░█████████  ░█████████  ░██    ░██ ░█████████  ░█████████     ░██   ██     ░█████");
-	sendLine(client_fd, "   ░██  ░██   ░██   ░██                   ░██ ░██         ░██   ░██    ░██  ░██  ░██         ░██   ░██      ░█████████  ░██");
-	sendLine(client_fd, "   ░██  ░██    ░██   ░██   ░██     ░██   ░██  ░██         ░██    ░██    ░██░██   ░██         ░██    ░██          ░██   ░██");
-	sendLine(client_fd, " ░██████░██     ░██   ░██████       ░██████   ░██████████ ░██     ░██    ░███    ░██████████ ░██     ░██         ░██   ░████████\033[0m");
-
-	sendLine(client_fd, " ");
-	sendLine(client_fd, "\033[1;35mNOTICE * :Welcome to IRC SERVER 42");
-	sendLine(client_fd, "\033[1;35mNOTICE * :Authentication required.");
-	sendLine(client_fd, "\033[1;35mNOTICE * :");
-	sendLine(client_fd, "\033[1;35mNOTICE * :Please authenticate first:");
-	sendLine(client_fd, "\033[1;35mNOTICE * :PASS <password>");
-	sendLine(client_fd, "\033[1;35mNOTICE * :");
-	sendLine(client_fd, "\033[1;35mNOTICE * :Then continue with:");
-	sendLine(client_fd, "\033[1;35mNOTICE * :NICK <nickname>");
-	sendLine(client_fd, "\033[1;35mNOTICE * :USER <username> 0 * :realname");
+	sendLine(client_fd, "Genius is one percent inspiration, ninety-nine percent perspiration ― Thomas A. Edison");
 }
 
 void Server::HandlePass(int client_fd, const std::vector<std::string> &line, int client_index)
 {
-	// int client_index = findClientbyFd(client_fd);
-	// if (client_index < 0)
-	// 	return;
 	if (line.size() < 2)
 	{
 		std::cerr << "Client fd: " << client_fd << " sent PASS without parameter." << std::endl;
@@ -126,9 +105,6 @@ void Server::HandlePass(int client_fd, const std::vector<std::string> &line, int
 
 void Server::HandleNick(int client_fd, const std::vector<std::string> &line, int client_index)
 {
-	// int client_index = findClientbyFd(client_fd);
-	// if (client_index < 0)
-	// 	return;
 	if (line.size() < 2)
 	{
 		std::cerr << "Client fd: " << client_fd << " sent NICK without parameter." << std::endl;
@@ -149,22 +125,17 @@ void Server::HandleNick(int client_fd, const std::vector<std::string> &line, int
 		}
 		if(nickname[0] == '#' || nickname[0] == '&' || nickname[0] == ':' || isdigit(nickname[0]))
 		{	
-			/* friday added check */
-			std::cout << RED "invalid nick: starts from prohibited character." R<< std::endl;
 			sendLine(client_fd, ":server 432 " +nickname + " :Erroneous nickname");
 			return;
 		}
 		for(size_t i = 0; i < nickname.size(); i++)
 		{
-			/* friday added check */
 			if((nickname[i] == ' ') || (!isascii(nickname[i])))
 			{
-				std::cout << RED "invalid nick: space or non ascii char." R << std::endl;
 				sendLine(client_fd, ":server 432 " +nickname + " :Erroneous nickname");
 				return;
 			}
 		}
-		// if(!(clients[client_index].getNickname().size() > 0))
 		if(clients[client_index].getNickname().empty())
 		{
 			clients[client_index].setNickname(nickname);
@@ -189,7 +160,6 @@ void Server::HandleNick(int client_fd, const std::vector<std::string> &line, int
 					std::string nickChangeMsg = ":" + old_nick + "!" + clients[client_index].getUsername() + "@host NICK :" + nickname;
 					it->second.broadcast(nickChangeMsg);
 				}
-				// }
 			}
 		}
 	}
@@ -264,9 +234,6 @@ void Server::HandleJoin(int client_fd, const std::vector<std::string> &line, int
 	// Only the first user can join a +i channel without invite
 	if (ch->isInviteOnly() && ch->getUserCount() > 0)
 	{
-		// if (ch->getUserCount() == 0) /* MONDAY for emopty chat situation */
-		// 	ch->addUser(client_fd, clients[client_index].getNickname());
-
 		if (!ch->isUserInvited(client_fd)) 
 		{
 			sendLine(client_fd, ":server 473 " + channel_name + " :Cannot join channel (+i)");
@@ -307,11 +274,8 @@ void Server::HandleJoin(int client_fd, const std::vector<std::string> &line, int
 	// 1) Broadcast JOIN to all members
 	std::string joinMsg = ":" + nick + "!" + user + "@host JOIN " + channel_name;
 	const std::map<std::string, int> &members = ch->getClients();
-	for (std::map<std::string, int>::const_iterator it = members.begin();
-		it != members.end(); ++it)
-	{
+	for (std::map<std::string, int>::const_iterator it = members.begin(); it != members.end(); it++)
 		sendLine(it->second, joinMsg);
-	}
 
 	// 2) Topic (only to joining user)
 	// 331: RPL_NOTOPIC
@@ -320,8 +284,7 @@ void Server::HandleJoin(int client_fd, const std::vector<std::string> &line, int
 	// 3) Names list (only to joining user)
 	// 353: RPL_NAMREPLY
 	std::string names = ":server 353 " + nick + " = " + channel_name + " :";
-	for (std::map<std::string, int>::const_iterator it = members.begin();
-		it != members.end(); ++it)
+	for (std::map<std::string, int>::const_iterator it = members.begin(); it != members.end(); it++)
 	{
 		if (ch->isOperator(it->second))
 			names += "@";
@@ -359,7 +322,6 @@ void Server::HandlePrivMsg(int client_fd, const std::vector<std::string> &line, 
 	{
 			if (i > 2)
 				message += " " + line[i];
-			//message = message + line[i];
 	}
 
 	std::string nick = clients[client_index].getNickname();
@@ -429,10 +391,8 @@ void Server::HandleTopic(int client_fd, const std::vector<std::string> &line, in
 		return ;
 		
 	/* MODE */
-	std::cout << "HEEERRRREEEEE" << std::endl;
 	if (ch->getTopicRestricted() == true && !ch->isOperator(client_fd))
 	{
-		std::cout << "NOOOOOWWWWWW" << std::endl;
 		sendLine(client_fd, ":server 482 " + line[1] + " :You're not channel operator");
 		return ;
 	}
@@ -442,7 +402,6 @@ void Server::HandleTopic(int client_fd, const std::vector<std::string> &line, in
 		std::string current_topic = ch->getTopic();
 		if (!current_topic.empty())
 		{
-			// ch->setTopicRestricted(true); //we just seeing here as i understand
 			sendLine(client_fd, ":server 332 " + nick + " " + line[1] + " :" + current_topic);							// 332: RPL_TOPIC
 			return ;
 		}
@@ -450,11 +409,10 @@ void Server::HandleTopic(int client_fd, const std::vector<std::string> &line, in
 		return ;
 	}
 
-
 	std::string topic = line[2];
 	ch->setTopic(topic);
 	std::map<std::string, int> members = ch->getClients();
-	for (std::map<std::string, int>::iterator it = members.begin(); it != members.end(); ++it)
+	for (std::map<std::string, int>::iterator it = members.begin(); it != members.end(); it++)
 		sendLine(it->second, ":" + nick + "!"+ clients[client_index].getUsername() + "@host TOPIC " + line[1] + " :" + topic);
 	
 	std::cout << "Client fd: " << client_fd << " set TOPIC for channel " << line[1] << " to: " << topic << std::endl;
@@ -522,15 +480,6 @@ void Server::HandleKick(int client_fd, const std::vector<std::string> &line, int
 		sendLine(client_fd, ":server 461 KICK :Not enough parameters");
 		return ;
 	}
-	// int client_index = findClientbyFd(client_fd);
-	// if (client_index < 0)	
-	// 	return ;
-
-	// if (clients[client_index].getIsRegistered() == false)
-	// {
-	// 	sendLine(client_fd, "451 :You have not registered");
-	// 	return ;
-	// }
 	
 	if (clients[client_index].getIsInChannel() == false)
 	{
@@ -566,14 +515,13 @@ void Server::HandleKick(int client_fd, const std::vector<std::string> &line, int
 	
 	std::string kick_msg = ":" + clients[client_index].getNickname() + "!" + clients[client_index].getUsername() + "@host KICK " + channel_name + " " + target_nick;
 	const std::map<std::string, int> &members = ch->getClients();
-	for (std::map<std::string, int>::const_iterator it = members.begin(); it != members.end(); ++it)
+	for (std::map<std::string, int>::const_iterator it = members.begin(); it != members.end(); it++)
 		sendLine(it->second, kick_msg);
 	
 	ch->removeUser(target_fd);
 	std::cout << "Client fd: " << client_fd << " kicked " << target_nick << " from channel " << channel_name << std::endl;
 }
 
-/* IRS does not read ANSI code it will either ignore or send gibberish so no colors in sendLine (send) */
 void Server::HandleQuit(int client_fd, int client_index, std::vector<std::string> tokens)
 {
 	/* broadcast message to all channels */
@@ -600,7 +548,6 @@ void Server::HandleQuit(int client_fd, int client_index, std::vector<std::string
 	}
 
 	std::cout << "Client fd: " << client_fd << " is quitting." << std::endl;
-	sendLine(client_fd, "\033[2J\033[H");  // Clear screen
 	RemoveClient(client_fd);
 }
 
@@ -619,9 +566,7 @@ void Server::HandleMode(int client_fd, const std::vector<std::string> &line, int
 		sendLine(client_fd, ":server 403 " + channelName + " :No such channel");
 		return;
 	}
-	// int clientIndex = findClientbyFd(client_fd);
-	// if (clientIndex == -1) 
-	// 	return;
+
 	if (!channel->isOperator(client_fd)) 
 	{
 		sendLine(client_fd, ":server 482 " + channelName + " :You're not channel operator");
@@ -697,7 +642,7 @@ void Server::HandleMode(int client_fd, const std::vector<std::string> &line, int
 				}
 				else 
 				{
-					if (adding)/* MONDAY  */
+					if (adding)
 					{
 						channel->addOperator(targetFd);
 						std::string modeMsg = ":" + clients[client_index].getNickname() + "!" + clients[client_index].getUsername() + "@host MODE " + channel->getName() + " +o " + clients[findClientbyFd(targetFd)].getNickname();
@@ -758,19 +703,11 @@ void Server::HandleMode(int client_fd, const std::vector<std::string> &line, int
 
 void Server::SendMessage(int client_fd, const std::vector<std::string> &line, int client_index)
 {
-	// int client_index = findClientbyFd(client_fd);
-	// if (client_index < 0)
-	// 	return;
 	if (clients[client_index].getIsInChannel() == true)
-	{
 		for (size_t i = 1; i < line.size(); i++)
 			std::cout << line[i] << std::endl;
-	}
 	else
-	{
-		std::cerr << "Client fd: " << client_fd
-			<< " attempted to send message without being in a channel." << std::endl;
-	}
+		std::cerr << "Client fd: " << client_fd << " attempted to send message without being in a channel." << std::endl;
 }
 
 void Server::ProcessCommand(int client_fd, const std::string &line)
@@ -794,19 +731,12 @@ void Server::ProcessCommand(int client_fd, const std::string &line)
 	std::cout << "[" << client_fd << "] " << command << std::endl;
 
 	if (command == "CAP")
-	{
-		return; //ignoring 
-		/*sendLine(client_fd, "CAP * LS :"); //hexchat. 
-		^
-		 chat sais this is wrong bc this is client request 
-		not a server reply. It suggest to ignore or just sent "CAP * ACK :" */
-		
-		// sendLine(client_fd, ":server CAP * LS :multi-prefix"); //irssi
-	}
+		return; 
+	
 	else if (command == "PING")
 	{
 		if (tokens.size() > 1)
-			sendLine(client_fd, "PONG ircserv :" + tokens[1]); /* !!!!!!! tokens.back() !!!!!!also sends last token, safer than token[1] */
+			sendLine(client_fd, "PONG ircserv :" + tokens[1]);
 		else
 			sendLine(client_fd, "PONG ircserv");
 	}
@@ -851,6 +781,3 @@ void Server::ProcessCommand(int client_fd, const std::string &line)
 		return;
 	}
 }
-
-
-

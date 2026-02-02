@@ -89,7 +89,7 @@ void Channel::removeUser(int client_fd)
 	{
 		int new_oper = users[0];
 		addOperator(new_oper);
-		broadcast("New channel operator assigned"); /* Does it have to be specified who new became an operator? */
+		broadcast("New channel operator assigned");
 	}
 }
 

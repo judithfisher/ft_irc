@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServerChannels.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: judith <judith@student.42.fr>              +#+  +:+       +#+        */
+/*   By: jfischer <jfischer@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/24 18:05:00 by codex             #+#    #+#             */
-/*   Updated: 2026/01/24 18:05:00 by codex            ###   ########.fr       */
+/*   Updated: 2026/02/02 21:45:44 by jfischer         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,9 +37,7 @@ void Server::createChannel(const std::string &name)
 		std::cout << "Channel created: " << name << std::endl;
 	}
 	else
-	{
 		std::cerr << "Channel already exists: " << name << std::endl;
-	}
 }
 
 void Server::removeChannel(const std::string &name)
@@ -52,7 +50,5 @@ void Server::removeChannel(const std::string &name)
 		std::cout << "Channel removed: " << name << std::endl;
 	}
 	else
-	{
 		std::cerr << "Channel not found: " << name << std::endl;
-	}
 }
