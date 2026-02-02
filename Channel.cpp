@@ -110,6 +110,7 @@ void Channel::removeOperator(int client_fd)
 		if (operators[i] == client_fd)
 		{
 			operators.erase(operators.begin() + i);
+
 			break;
 		}
 	}
@@ -134,6 +135,23 @@ bool Channel::isOperator(int client_fd) const
 	}
 	return false;
 }
+
+size_t Channel::getFirstUser() const
+{
+	return(this->users[0]);
+}
+
+size_t Channel::getOperatorsSize() const
+{
+    size_t opr_size = this->operators.size();
+	return (opr_size);
+}
+
+std::string Channel::getName() const
+{
+	return(this->name);
+}
+
 
 // broadcast to all clients
 void Channel::broadcast(const std::string &msg)

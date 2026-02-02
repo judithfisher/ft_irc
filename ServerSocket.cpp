@@ -167,8 +167,8 @@ void Server::RemoveClient(int client_fd)
 	for (std::map<std::string, Channel>::iterator it = channels.begin();
 		it != channels.end();)
 	{
-		/* broadcast to everyone that client left + what he wrote */
-		it->second.broadcast(":" + nick + "!" + user + "@host QUIT :Client Quit");
+		/* //broadcast to everyone that client left + what he wrote 
+		it->second.broadcast(":" + nick + "!" + user + "@host QUIT :Client Quit"); */
 		
 		it->second.removeUser(client_fd);
 		it->second.removeOperator(client_fd);
@@ -177,6 +177,13 @@ void Server::RemoveClient(int client_fd)
 			std::cout << "Channel removed: " << it->first << std::endl;
 			channels.erase(it++);
 			continue;
+		}
+		else if (it->second.getOperatorsSize() < 1)/* MONDAY adding operator after deleting previous one upon quitting */
+		{
+			int new_opr_fd = it->second.getFirstUser();
+			int new_cln_index = findClientbyFd(new_opr_fd);
+			it->second.addOperator(new_opr_fd);
+			it->second.broadcast(":server  MODE " + it->second.getName() + " +o " + clients[new_cln_index].getNickname());
 		}
 		++it;
 	}

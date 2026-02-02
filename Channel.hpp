@@ -24,9 +24,11 @@ class Channel
 		void addInvitedUser(int client_fd);
 		bool isUserInvited(int client_fd) const;
 
-		std::string getName() const;
-		const std::vector<int> &getUsers() const;
+		std::string getName() const; /* MONDAY no definition made.......... */
+		//const std::vector<int> &getUsers() const; /* MONDAY was here no declaration */
+		size_t getFirstUser() const; /* MONDAY */
 		size_t getUserCount() const;
+		size_t getOperatorsSize() const; /* MONDAY */
 		std::string getTopic() const;
 		bool getTopicRestricted() const;
 
@@ -49,7 +51,7 @@ class Channel
 	private:
 		std::map<std::string, int> channel_clients;
 
-		std::vector<int> users;
+		std::vector<int> users; //keep fds of clients???????????
 		std::vector<int> operators;
 		std::vector<int> invitedUsers;
 

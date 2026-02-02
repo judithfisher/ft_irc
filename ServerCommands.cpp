@@ -262,13 +262,13 @@ void Server::HandleJoin(int client_fd, const std::vector<std::string> &line, int
 
 	// +i (invite-only): allow only first user, all others must be invited
 	// Only the first user can join a +i channel without invite
-	if (ch->isInviteOnly())
+	std::cout << RED " user COUNT FOR IS INVITE: " R << ch->getUserCount()<< std::endl;
+	if (ch->isInviteOnly() && ch->getUserCount() > 0)
 	{
-		if (ch->getUserCount() == 0) 
-		{
-			// First user can always join
-		} 
-		else if (!ch->isUserInvited(client_fd)) 
+		// if (ch->getUserCount() == 0) /* MONDAY for emopty chat situation */
+		// 	ch->addUser(client_fd, clients[client_index].getNickname());
+
+		if (!ch->isUserInvited(client_fd)) 
 		{
 			sendLine(client_fd, ":server 473 " + channel_name + " :Cannot join channel (+i)");
 			return;
@@ -289,8 +289,6 @@ void Server::HandleJoin(int client_fd, const std::vector<std::string> &line, int
 		sendLine(client_fd, ":server 471 " + channel_name + " :Cannot join channel (+l)");
 		return;
 	}
-	/* MODE */
-
 
 	// Store fd + nick in channel to avoid Client* pointer invalidation.
 	ch->addUser(clients[client_index].getFd(), clients[client_index].getNickname());
@@ -341,36 +339,25 @@ void Server::HandleJoin(int client_fd, const std::vector<std::string> &line, int
 
 void Server::HandlePrivMsg(int client_fd, const std::vector<std::string> &line, int client_index)
 {
-	// int client_index = findClientbyFd(client_fd);
-	// if (client_index < 0)
-	// 	return;
 	if (line.size() < 2)
 	{
 		// 411: ERR_NORECIPIENT
-		sendLine(client_fd, ":server 411 :No recipient given (PRIVMSG)");
+		sendLine(client_fd, ":server 411 : No recipient given (PRIVMSG)");
 		return;
 	}
 	if (line.size() < 3)
 	{
 		// 412: ERR_NOTEXTTOSEND
-		sendLine(client_fd, ":server 412 :No text to send");
+		sendLine(client_fd, ":server 412 : No text to send");
 		return;
 	}
-
-	// if (line[2][0] != ':')
-	// {
-	// 	// 412: ERR_NOTEXTTOSEND
-	// 	sendLine(client_fd, ":server 412 :No text to send");
-	// 	return;
-	// }
 	
 	std::string target = line[1];
-	std::string message;
-	message = line[2];
+	std::string message = line[2];
 	for (size_t i = 3; i < line.size(); i++)
 	{
 			if (i > 2)
-				message += " " + message;
+				message += " " + line[i];
 			//message = message + line[i];
 	}
 
@@ -611,7 +598,6 @@ void Server::HandleQuit(int client_fd, int client_index, std::vector<std::string
 
 	std::cout << "Client fd: " << client_fd << " is quitting." << std::endl;
 	sendLine(client_fd, "\033[2J\033[H");  // Clear screen
-	// checker needs to go here if user in channel, for loop to erase user from channel
 	RemoveClient(client_fd);
 }
 
